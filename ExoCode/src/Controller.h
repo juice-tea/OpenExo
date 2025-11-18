@@ -549,9 +549,12 @@ public:
 
     int ending_step;
 
+    float upper_toe_change;
+    float lower_toe_change;
     bool local_toe_stance;          /* Flag to indicate if the toe is in stance phase. Needs different thresholds than the ankle so keeping it here to avoid conflict */
-    //float lower_toe_threshold;
-    //float upper_toe_threshold;
+    float raw_toe_fsr;
+    float lower_toe_threshold;
+    float upper_toe_threshold;
 
     float prev_toe_fsr;
     
@@ -596,6 +599,7 @@ public:
     void calibrate_encoders();      /* Function to finds the offset angle when the user is standing still upon initiation of the trial. */
     void normalize_stance_moment(); /* Function to calucalte the max and min stance_moment to normalize to the variable between -1 and 1. */
     void normalize_angle();
+    bool local_toe_stance_schmitt();    /* Function to determine toe stance using Schmidt method, this toe stance is specific only to the anglebased hip controller*/
     //float getAngle();               /* Function to get the average angle over the past *5* readings. */
 
 private:
