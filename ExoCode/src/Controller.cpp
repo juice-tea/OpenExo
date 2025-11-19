@@ -2999,6 +2999,10 @@ float AngleBased::calc_motor_cmd()
         int recal_angle_flag = _controller_data->parameters[controller_defs::angle_based::recalibrate_angle_idx];
         float lower_toe_threshold = _controller_data->parameters[controller_defs::angle_based::lower_toe_threshold_idx];
         float upper_toe_threshold = _controller_data->parameters[controller_defs::angle_based::upper_toe_threshold_idx];
+        Serial.print("lower_toe_threshold: ");
+        Serial.println(lower_toe_threshold);
+        Serial.print("upper_toe_threshold: ");
+        Serial.println(upper_toe_threshold);
         correction_factor[0] = _controller_data->parameters[controller_defs::angle_based::correction_factor_0_idx];
         correction_factor[0] = correction_factor[0] / 1000.0;
         correction_factor[1] = _controller_data->parameters[controller_defs::angle_based::correction_factor_1_idx];
@@ -3007,7 +3011,6 @@ float AngleBased::calc_motor_cmd()
         correction_factor[2] = correction_factor[2] / 1000.0;
         offset_alpha = _controller_data->parameters[controller_defs::angle_based::offset_alpha_idx];
         offset_alpha = offset_alpha / 1000.0;
-        _controller_data->recal_flag = lower_toe_threshold;
 
         // Pull in FSR values (double check that Toe FSR, located in Side.h, is not drawing from the FSR_Regressed Function)
         float raw_heel_fsr = _side_data->heel_fsr;
@@ -3246,6 +3249,7 @@ float AngleBased::calc_motor_cmd()
         if ((_side_data->heel_stance || local_toe_stance) && normalized_stance_moment > 0)
         {
             state = 1;
+            Serial.println("state = 1");
             if(prev_state == 3) // If we just entered stance, we need to reset the encoder offset to prevent large jumps in perceived angle
             {
                 skip_intended_encoder_offset = true; // Skip the intended encoder offset calculation
@@ -3258,12 +3262,14 @@ float AngleBased::calc_motor_cmd()
             if(state != 3)
             {
                 state = 2;
+            Serial.println("state = 2");
             }
         }
 
-        if (local_toe_stance && !_side_data->heel_stance)
+        if (!local_toe_stance && !_side_data->heel_stance)
         {
             state = 3;
+            Serial.println("state = 3");
         }
 
         _controller_data->control_state = state;
@@ -3431,39 +3437,57 @@ void AngleBased::normalize_angle()
 bool AngleBased::local_toe_stance_schmitt()    /* Function to determine toe stance using Schmidt method, this toe stance is specific only to the anglebased hip controller*/
 {
     // this schmitt trigger is defining stance using the change in FSR not the current FSR value that is done previously by side_data->toe_stance
-    // bool stance = utils::schmitt_trigger(raw_toe_fsr - prev_toe_fsr, local_toe_stance, upper_toe_change, lower_toe_change);
-
     bool stance = _side_data->toe_stance;
+    
     Serial.print("Toe Stance: ");
     Serial.println(stance);
     Serial.print("Local Toe Stance: ");
     Serial.println(local_toe_stance);
-    /*
+    
     Serial.print("Raw: ");
     Serial.print(raw_toe_fsr);
     Serial.print(" Prev: ");
     Serial.println(prev_toe_fsr);
-    Serial.print("Raw - Prev: ");
-    Serial.println(raw_toe_fsr - prev_toe_fsr);
-    */
 
+    float delta = raw_toe_fsr - prev_toe_fsr;
+    float neg_delta = prev_toe_fsr - raw_toe_fsr;
+    
+    Serial.print("delta: ");
+    Serial.println(delta);
+    Serial.print("neg delta: ");
+    Serial.println(neg_delta);
+    
+    // we only want local toe stance to be true if the real toe stance is true and other conditions are met
     if(stance)
     {
-        //set stance false if decreasing
-        if(raw_toe_fsr -  prev_toe_fsr < -1*lower_toe_threshold)
+        if(neg_delta > 0.015) //lower
         {
+            //set stance false if decreasing
             stance = false;
-            Serial.print("raw - prev < lower. Stance: ");
+            Serial.print("prev - raw > lower. Stance: ");
             Serial.println(stance);
-        }
-
-        if(raw_toe_fsr - prev_toe_fsr > upper_toe_threshold)
+        } 
+        else if(delta > 0.015) //upper
         {
+            //set stance true if increasing
             stance = true;
             Serial.print("raw - prev > upper. Stance: ");
             Serial.println(stance);
         }
+        else
+        {
+            //if the change is not great enough keep it the same
+            stance = local_toe_stance;
+            Serial.print("No change. Stance: ");
+            Serial.println(stance);
+        }
     }
+    /*
+    else
+    {
+        stance = local_toe_stance;
+    }
+    */
 
     return stance;
 }
