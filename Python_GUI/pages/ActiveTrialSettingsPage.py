@@ -337,7 +337,7 @@ class ActiveTrialSettingsPage(QtWidgets.QWidget):
                         else:
                             print(f"Warning: Row too short (len={len(row)}), cannot extract controller ID from row[3]")
                         
-                        payload = [is_bilateral, joint_num, controller_id, parameter_idx, value]
+                        payload = [is_bilateral, joint_id_raw, controller_id, parameter_idx, value]
                         print(f"Payload: is_bilateral={is_bilateral}, joint_num={joint_num} (joint_id={joint_id_raw}), controller_id={controller_id}, param_idx={parameter_idx}, value={value}")
                         print(f"Full row: {row}")
                         print(f"======================\n")

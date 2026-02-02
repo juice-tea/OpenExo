@@ -84,8 +84,8 @@ class JointConfig:
         65: 2,  # Right Hip
         34: 3,  # Left Knee
         66: 4,  # Right Knee
-        36: 5,  # Left Ankle
-        68: 6,  # Right Ankle
+        36: 5,  # Right Ankle
+        68: 6,  # Left Ankle
         40: 7,  # Left Elbow
         72: 8,  # Right Elbow
     }
