@@ -789,11 +789,6 @@ namespace UART_command_utils
             return;
         }
 
-        //logger::println("UART_command_utils::handle_message->got message: ");
-        //UART_msg_t_utils::print_msg(msg);
-		
-		Serial.print("\nmsg.command:");
-		Serial.print(msg.command);
         switch (msg.command)
         {
         case UART_command_names::empty_msg:
