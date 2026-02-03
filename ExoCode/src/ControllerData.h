@@ -85,6 +85,20 @@ namespace controller_defs                   /**< Stores the parameter indexes fo
         const uint8_t num_parameter = 16;
     }
 
+    namespace pulse
+    {
+        const uint8_t magnitude_idx = 0;                //Magnitude of the applied torque, in Nm
+        const uint8_t duration_idx = 1;                 //Duration of the pulse in milliseconds
+        const uint8_t direction_idx = 2;                //Flag to flip the direction of the applied torque
+        const uint8_t use_percent_gait_idx = 3;          //0 = use percent stance (legacy), 1 = use percent gait
+        const uint8_t start_percent_gait_idx = 4;      //Percent of gait cycle to start the pulse
+        const uint8_t use_pid_idx = 5;                  //Flag to determine whether or not PID used
+        const uint8_t p_gain_idx = 6;                   //Value of P Gain for
+        const uint8_t i_gain_idx = 7;                   //Value of I Gain for PID control
+        const uint8_t d_gain_idx = 8;                   //Value of D Gain for PID control
+        const uint8_t num_parameter = 9;
+    }
+
     namespace franks_collins_hip
     {
         const uint8_t mass_idx = 0;                             //Mass of the User in kg

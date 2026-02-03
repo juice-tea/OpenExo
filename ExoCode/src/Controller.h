@@ -237,6 +237,26 @@ class Spline: public _Controller
 };
 
 /**
+ * @brief Pulse Controller
+ * This controller is used to provide pulses of torque to any joint.
+ * User defines pulse magnitude, duration, start gait percentage, and direction.
+ */
+class Pulse: public _Controller
+{
+    public:
+        Pulse(config_defs::joint_id id, ExoData* exo_data);
+        ~Pulse(){};
+
+        float calc_motor_cmd();
+    
+    private:
+        float calc_pulse_cmd();
+        float pulse_start_time; // Time when the pulse started
+        bool live_pulse;    // Flag to indicate if a pulse should be live
+        bool cycle_pulse_occured; // Flag to indicate if a pulse has occurred in the current gait cycle
+};
+
+/**
  * @brief Franks Collins Controller
  * This controller is for the Hip Joint
  *

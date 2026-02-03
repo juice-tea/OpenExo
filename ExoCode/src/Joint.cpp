@@ -609,7 +609,7 @@ HipJoint::HipJoint(config_defs::joint_id id, ExoData* exo_data)
                 #endif
                 HipJoint::set_motor(new AK45_10(id, exo_data, _Joint::get_motor_enable_pin(id, exo_data)));
                 break;
-			case (uint8_t)config_defs::motor::MaxonMotor:
+            case (uint8_t)config_defs::motor::MaxonMotor:
                 #ifdef JOINT_DEBUG
                     logger::println("MaxonMotor");
                 #endif
@@ -969,6 +969,7 @@ AnkleJoint::AnkleJoint(config_defs::joint_id id, ExoData* exo_data)
 , _step(id, exo_data)
 , _spv2(id, exo_data)
 , _pjmc_plus(id, exo_data)
+, _pulse(id, exo_data)
 {
     #ifdef JOINT_DEBUG
         logger::print(_is_left ? "Left " : "Right ");
@@ -1048,11 +1049,17 @@ AnkleJoint::AnkleJoint(config_defs::joint_id id, ExoData* exo_data)
                 #endif
                 AnkleJoint::set_motor(new AK45_10(id, exo_data, _Joint::get_motor_enable_pin(id, exo_data)));
                 break;
-			case (uint8_t)config_defs::motor::MaxonMotor:
+            case (uint8_t)config_defs::motor::MaxonMotor:
                 #ifdef JOINT_DEBUG
                     logger::println("MaxonMotor");
                 #endif
                 AnkleJoint::set_motor(new MaxonMotor(id, exo_data, _Joint::get_motor_enable_pin(id, exo_data)));
+                break;
+            case (uint8_t)config_defs::motor::AKE60_8:
+                #ifdef JOINT_DEBUG
+                    logger::println("AKE60_8");
+                #endif
+                AnkleJoint::set_motor(new AKE60_8(id, exo_data, _Joint::get_motor_enable_pin(id, exo_data)));
                 break;
             default :
                 #ifdef JOINT_DEBUG
@@ -1180,6 +1187,9 @@ void AnkleJoint::set_controller(uint8_t controller_id)  //Changes the high level
             break;
         case (uint8_t)config_defs::ankle_controllers::spline :
             _controller = &_spline;
+            break;
+        case (uint8_t)config_defs::ankle_controllers::pulse :
+            _controller = &_pulse;
             break;
         case (uint8_t)config_defs::ankle_controllers::constant_torque:
             _controller = &_constant_torque;

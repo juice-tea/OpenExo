@@ -946,6 +946,73 @@ float Spline::_spline_interpolate(const float* x, const float* y, float percent_
 
 //****************************************************
 
+Pulse::Pulse(config_defs::joint_id id, ExoData* exo_data)
+: _Controller(id, exo_data)
+{
+    #ifdef CONTROLLER_DEBUG
+        logger::println("Pulse::Constructor");
+    #endif
+};
+
+float Pulse::calc_pulse_cmd()
+{
+    //Sets pulse command to zero initially
+    float pulse_torque_cmd = 0.0f;
+    //Calculates Percent Gait
+    float percent_gait = _get_percent_gait(0);
+    //Checks if within pulse window set by user
+    if (percent_gait > _controller_data->parameters[controller_defs::pulse::start_percent_gait_idx])
+    {   
+        //Sets pulse to live and starts tracking duration
+        if (live_pulse == false and cycle_pulse_occured == false) {
+            pulse_start_time = millis();
+            live_pulse = true;
+            cycle_pulse_occured = true;
+        }
+        //For a live pulse calculate the motor command
+        else {
+            pulse_torque_cmd = _controller_data->parameters[controller_defs::pulse::magnitude_idx];
+        }
+        //Ends pulse after duration exceeded
+        if (millis() - pulse_start_time > _controller_data->parameters[controller_defs::pulse::duration_idx]) {
+            live_pulse = false;
+        }
+    }
+    //Resets flag to ensure pulse is delivered next gait cycle
+    else {
+        cycle_pulse_occured = false;
+    }
+    //Returns the current required torque associated with the pulse settings and gait cycle.
+    return pulse_torque_cmd;
+}
+
+float Pulse::calc_motor_cmd() {
+    //Calculates Torque Command
+    float torque_cmd = calc_pulse_cmd();
+    
+    //Sets the feed-forward setpoint to the desired command
+    _controller_data->ff_setpoint = torque_cmd;
+    
+    //Filters the torque
+    _controller_data->filtered_torque_reading = utils::ewma(_joint_data->torque_reading, _controller_data->filtered_torque_reading, 0.5);
+
+    //Adds PID Control if desired 
+    if (_controller_data->parameters[controller_defs::pulse::use_pid_idx])
+    {
+        torque_cmd = torque_cmd + _pid(torque_cmd, _controller_data->filtered_torque_reading, _controller_data->parameters[controller_defs::pulse::p_gain_idx], _controller_data->parameters[controller_defs::pulse::i_gain_idx], _controller_data->parameters[controller_defs::pulse::d_gain_idx]);
+    }
+    //Sets previous command for next loop of controller
+    _controller_data->previous_cmd = torque_cmd;
+    
+    //Sets the desired torque for plotting
+    _controller_data->desired_torque = torque_cmd;
+
+    return torque_cmd;
+};
+
+
+//****************************************************
+
 FranksCollinsHip::FranksCollinsHip(config_defs::joint_id id, ExoData* exo_data)
 : _Controller(id, exo_data)
 {

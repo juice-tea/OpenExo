@@ -14,6 +14,7 @@
 #if defined(ARDUINO_TEENSY36) || defined(ARDUINO_TEENSY41)
 
 #include "Arduino.h"
+#include <Servo.h>
 
 #include "ExoData.h"
 #include "ParseIni.h"
@@ -158,15 +159,54 @@ class MaxonMotor : public _Motor
 	bool do_scan4maxon_err_right = true;              /**< Part of the Maxon motor driver error reporting utilities: A switch to enable or disable error detection */
 	bool maxon_counter_active_right = false;          /**< Part of the Maxon motor driver error reporting utilities: A switch for the error detection counter */
 	unsigned long zen_millis_right;                   /**< Part of the Maxon motor driver error reporting utilities: A timer for the motor reset function */
-	const int _ctrl_left_pin = logic_micro_pins::maxon_ctrl_left_pin;	/**< Teensy pin to transmit left Maxon motor pwm signals */
-	const int _ctrl_right_pin = logic_micro_pins::maxon_ctrl_right_pin;	/**< Teensy pin to transmit right Maxon motor pwm signals */
-	const int _err_left_pin = logic_micro_pins::maxon_err_left_pin;	/**< Teensy pin to receive left Maxon motor driver errors */
-	const int _err_right_pin = logic_micro_pins::maxon_err_right_pin;	/**< Teensy pin to receive right Maxon motor driver errors */
-	const int _current_left_pin = logic_micro_pins::maxon_current_left_pin;	/**< Teensy pin to receive left Maxon motor current data */
-	const int _current_right_pin = logic_micro_pins::maxon_current_right_pin;	/**< Teensy pin to receive right Maxon motor current data */
-	const int _pwm_neutral_val = logic_micro_pins::maxon_pwm_neutral_val;	/**< Neutral pwm command for Maxon motor drivers */
-	const int _pwm_u_bound = logic_micro_pins::maxon_pwm_u_bound;	/**< Upper bound of pwm command for Maxon motor drivers */
-	const int _pwm_l_bound = logic_micro_pins::maxon_pwm_l_bound;	/**< Lower bound of pwm command for Maxon motor drivers */
+	const int _ctrl_left_pin = logic_micro_pins::motor_ctrl_left_pin;	/**< Teensy pin to transmit left Maxon motor pwm signals */
+	const int _ctrl_right_pin = logic_micro_pins::motor_ctrl_right_pin;	/**< Teensy pin to transmit right Maxon motor pwm signals */
+	const int _err_left_pin = logic_micro_pins::motor_err_left_pin;	/**< Teensy pin to receive left Maxon motor driver errors */
+	const int _err_right_pin = logic_micro_pins::motor_err_right_pin;	/**< Teensy pin to receive right Maxon motor driver errors */
+	const int _current_left_pin = logic_micro_pins::motor_current_left_pin;	/**< Teensy pin to receive left Maxon motor current data */
+	const int _current_right_pin = logic_micro_pins::motor_current_right_pin;	/**< Teensy pin to receive right Maxon motor current data */
+	const int _pwm_neutral_val = logic_micro_pins::duty_cycle_pwm_neutral;	/**< Neutral pwm command for Maxon motor drivers */
+	const int _pwm_u_bound = logic_micro_pins::duty_cycle_pwm_upper_bound;	/**< Upper bound of pwm command for Maxon motor drivers */
+	const int _pwm_l_bound = logic_micro_pins::duty_cycle_pwm_lower_bound;	/**< Lower bound of pwm command for Maxon motor drivers */
+};
+
+/**
+ * @brief Class for CubeMars AKE60-8 motor
+ */
+class AKE60_8 : public _Motor
+{
+    public:
+    AKE60_8(config_defs::joint_id id, ExoData* exo_data, int enable_pin);
+	void read_data() {};
+    void send_data(float torque);
+    void transaction(float torque);
+    void on_off() {};
+    bool enable();
+    bool enable(bool overide);
+    void zero() {};
+    float get_Kt() {return 0.0;};
+    void set_error() {};                        //Not yet implemented for this motor type
+	void master_switch();
+	
+	protected:
+	Servo servo_left;                           /**< Servo object for left motor control */
+	Servo servo_right;                          /**< Servo object for right motor control */
+	bool _enable_response;                      /**< True if the motor responded to an enable command */
+	bool do_scan4ake60_err_left = true;              /**< Part of the Maxon motor driver error reporting utilities: A switch to enable or disable error detection */
+	bool maxon_counter_active_left = false;          /**< Part of the Maxon motor driver error reporting utilities: A switch for the error detection counter */
+	unsigned long zen_millis_left;                   /**< Part of the Maxon motor driver error reporting utilities: A timer for the motor reset function */
+	bool do_scan4ake60_err_right = true;              /**< Part of the Maxon motor driver error reporting utilities: A switch to enable or disable error detection */
+	bool maxon_counter_active_right = false;          /**< Part of the Maxon motor driver error reporting utilities: A switch for the error detection counter */
+	unsigned long zen_millis_right;                   /**< Part of the Maxon motor driver error reporting utilities: A timer for the motor reset function */
+	const int _ctrl_left_pin = logic_micro_pins::motor_ctrl_left_pin;	/**< Teensy pin to transmit left Maxon motor pwm signals */
+	const int _ctrl_right_pin = logic_micro_pins::motor_ctrl_right_pin;	/**< Teensy pin to transmit right Maxon motor pwm signals */
+	const int _err_left_pin = logic_micro_pins::motor_err_left_pin;	/**< Teensy pin to receive left Maxon motor driver errors */
+	const int _err_right_pin = logic_micro_pins::motor_err_right_pin;	/**< Teensy pin to receive right Maxon motor driver errors */
+	const int _current_left_pin = logic_micro_pins::motor_current_left_pin;	/**< Teensy pin to receive left Maxon motor current data */
+	const int _current_right_pin = logic_micro_pins::motor_current_right_pin;	/**< Teensy pin to receive right Maxon motor current data */
+	const int _pwm_neutral_val = logic_micro_pins::duration_pwm_neutral;	/**< Neutral pwm command for ODrivePro drivers */
+	const int _pwm_u_bound = logic_micro_pins::duration_pwm_upper_bound;	/**< Upper bound of pwm command for ODrivePro drivers */
+	const int _pwm_l_bound = logic_micro_pins::duration_pwm_lower_bound;	/**< Lower bound of pwm command for ODrivePro drivers */
 };
 
 

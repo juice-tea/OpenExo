@@ -46,15 +46,15 @@
                 const unsigned int sync_default_pin = 25;
 				
 				//For Maxon PCB only
-				const unsigned int maxon_err_right_pin = not_connected_pin;
-				const unsigned int maxon_err_left_pin = not_connected_pin;
-				const unsigned int maxon_ctrl_left_pin = not_connected_pin;
-				const unsigned int maxon_ctrl_right_pin = not_connected_pin;
-				const unsigned int maxon_current_left_pin = not_connected_pin;
-				const unsigned int maxon_current_right_pin = not_connected_pin;
-				const unsigned int maxon_pwm_neutral_val = 2048;
-				const unsigned int maxon_pwm_u_bound = 3690;
-				const unsigned int maxon_pwm_l_bound = 655;
+				const unsigned int motor_err_right_pin = not_connected_pin;
+				const unsigned int motor_err_left_pin = not_connected_pin;
+				const unsigned int motor_ctrl_left_pin = not_connected_pin;
+				const unsigned int motor_ctrl_right_pin = not_connected_pin;
+				const unsigned int motor_current_left_pin = not_connected_pin;
+				const unsigned int motor_current_right_pin = not_connected_pin;
+				const unsigned int duty_cycle_pwm_neutral = 2048;
+				const unsigned int duty_cycle_pwm_upper_bound = 3690;
+				const unsigned int duty_cycle_pwm_lower_bound = 655;
 				
 				//Servo motor pins
 				const unsigned int servo_pins[] = {};
@@ -145,15 +145,15 @@
                 const unsigned int sync_default_pin = 5;
 				
 				//For Maxon PCB only
-				const unsigned int maxon_err_right_pin = not_connected_pin;
-				const unsigned int maxon_err_left_pin = not_connected_pin;
-				const unsigned int maxon_ctrl_left_pin = not_connected_pin;
-				const unsigned int maxon_ctrl_right_pin = not_connected_pin;
-				const unsigned int maxon_current_left_pin = not_connected_pin;
-				const unsigned int maxon_current_right_pin = not_connected_pin;
-				const unsigned int maxon_pwm_neutral_val = 2048;
-				const unsigned int maxon_pwm_u_bound = 3690;
-				const unsigned int maxon_pwm_l_bound = 655;
+				const unsigned int motor_err_right_pin = not_connected_pin;
+				const unsigned int motor_err_left_pin = not_connected_pin;
+				const unsigned int motor_ctrl_left_pin = not_connected_pin;
+				const unsigned int motor_ctrl_right_pin = not_connected_pin;
+				const unsigned int motor_current_left_pin = not_connected_pin;
+				const unsigned int motor_current_right_pin = not_connected_pin;
+				const unsigned int duty_cycle_pwm_neutral = 2048;
+				const unsigned int duty_cycle_pwm_upper_bound = 3690;
+				const unsigned int duty_cycle_pwm_lower_bound = 655;
 				
 				//Servo motor pins
 				const unsigned int servo_pins[] = {};
@@ -260,15 +260,15 @@
                 const unsigned int sync_default_pin = 5;
 				
 				//For Maxon PCB only
-				const unsigned int maxon_err_right_pin = not_connected_pin;
-				const unsigned int maxon_err_left_pin = not_connected_pin;
-				const unsigned int maxon_ctrl_left_pin = not_connected_pin;
-				const unsigned int maxon_ctrl_right_pin = not_connected_pin;
-				const unsigned int maxon_current_left_pin = not_connected_pin;
-				const unsigned int maxon_current_right_pin = not_connected_pin;
-				const unsigned int maxon_pwm_neutral_val = 2048;
-				const unsigned int maxon_pwm_u_bound = 3690;
-				const unsigned int maxon_pwm_l_bound = 655;
+				const unsigned int motor_err_right_pin = not_connected_pin;
+				const unsigned int motor_err_left_pin = not_connected_pin;
+				const unsigned int motor_ctrl_left_pin = not_connected_pin;
+				const unsigned int motor_ctrl_right_pin = not_connected_pin;
+				const unsigned int motor_current_left_pin = not_connected_pin;
+				const unsigned int motor_current_right_pin = not_connected_pin;
+				const unsigned int duty_cycle_pwm_neutral = 2048;
+				const unsigned int duty_cycle_pwm_upper_bound = 3690;
+				const unsigned int duty_cycle_pwm_lower_bound = 655;
 				
 				//Servo motor pins
 				const unsigned int servo_pins[] = {};
@@ -378,15 +378,15 @@
                 const unsigned int sync_default_pin = 5;
 				
 				//For Maxon PCB only
-				const unsigned int maxon_err_right_pin = not_connected_pin;
-				const unsigned int maxon_err_left_pin = not_connected_pin;
-				const unsigned int maxon_ctrl_left_pin = not_connected_pin;
-				const unsigned int maxon_ctrl_right_pin = not_connected_pin;
-				const unsigned int maxon_current_left_pin = not_connected_pin;
-				const unsigned int maxon_current_right_pin = not_connected_pin;
-				const unsigned int maxon_pwm_neutral_val = 2048;
-				const unsigned int maxon_pwm_u_bound = 3690;
-				const unsigned int maxon_pwm_l_bound = 655;
+				const unsigned int motor_err_right_pin = not_connected_pin;
+				const unsigned int motor_err_left_pin = not_connected_pin;
+				const unsigned int motor_ctrl_left_pin = not_connected_pin;
+				const unsigned int motor_ctrl_right_pin = not_connected_pin;
+				const unsigned int motor_current_left_pin = not_connected_pin;
+				const unsigned int motor_current_right_pin = not_connected_pin;
+				const unsigned int duty_cycle_pwm_neutral = 2048;
+				const unsigned int duty_cycle_pwm_upper_bound = 3690;
+				const unsigned int duty_cycle_pwm_lower_bound = 655;
 				
 				//Servo motor pins
 				const unsigned int servo_pins[] = {};
@@ -464,24 +464,28 @@
 			//Pin to use when we need a value but don't actually want to use it.
             const unsigned int not_connected_pin = 51;  //Selected 51 as it is a pad on the back so I figure it won't hurt anything if something goes wrong.
 			
-			 #if defined(ARDUINO_TEENSY41)
-				//Maxon motor Pins
-				const unsigned int maxon_err_right_pin = 37;
-				const unsigned int maxon_err_left_pin = 36;
-				const unsigned int maxon_ctrl_left_pin = A8;
-				const unsigned int maxon_ctrl_right_pin = A9;
-				const unsigned int maxon_current_left_pin = A0;
-				const unsigned int maxon_current_right_pin = A1;
-				const unsigned int maxon_pwm_neutral_val = 2048;
-				const unsigned int maxon_pwm_u_bound = 3690;
-				const unsigned int maxon_pwm_l_bound = 655;
+			#if defined(ARDUINO_TEENSY41)
+				//Motor driver pins
+				const unsigned int motor_err_left_pin = 36;
+                const unsigned int motor_err_right_pin = 37;
+				const unsigned int motor_ctrl_left_pin = A8;
+				const unsigned int motor_ctrl_right_pin = A9;
+				const unsigned int motor_current_left_pin = A0;
+				const unsigned int motor_current_right_pin = A1;
 				
-				//Servo motor pins
+                //Duty cycle based PWM values
+                const unsigned int duty_cycle_pwm_neutral = 2048;
+				const unsigned int duty_cycle_pwm_upper_bound = 3690;
+				const unsigned int duty_cycle_pwm_lower_bound = 655;
+                
+                //Duration based PWM values
+                const unsigned int duration_pwm_neutral = 1500; //in microseconds
+                const unsigned int duration_pwm_upper_bound = 2000; //in microseconds
+				const unsigned int duration_pwm_lower_bound = 1000; //in microseconds
+				
+                //Servo motor pins
 				const unsigned int servo_pins[] = {26,27};
 				
-				//Battery voltage sensing pin (for 0.5.1 Mark 3 only)
-				const unsigned int volt_sense = not_connected_pin;
-			 
 				//Serial Pins, NC
 				const unsigned int rx1_pin = 35;
 				const unsigned int tx1_pin = 34;
@@ -498,17 +502,17 @@
 				
 				//Torque Sensor Pins (This will need to be updated/fixed)
 				const unsigned int num_available_joints = 2;
-				//const unsigned int torque_sensor_left[] = {A16, A17};
 				const unsigned int torque_sensor_left[] = {A16};
-				//const unsigned int torque_sensor_left1 = A16;
-				//const unsigned int torque_sensor_right[] = {A6, A7};
 				const unsigned int torque_sensor_right[] = {A6};
-				//const unsigned int torque_sensor_right1 = A8;
 				
 				//Sync LED Pins
 				const unsigned int sync_led_pin = A17;
 				const unsigned int sync_default_pin = not_connected_pin;
 
+				//Battery voltage sensing pin (for 0.5.1 Mark 3 only)
+				const unsigned int volt_sense = not_connected_pin;
+
+                //Battery SMBus Pins - For use with Inspired Energy BMS
                 const unsigned int SmBusSDA = A4;
                 const unsigned int SmBusSCL = A5;
 			#endif
@@ -517,7 +521,7 @@
 			const unsigned int sync_led_on_state = LOW;
 			const unsigned int sync_led_off_state = HIGH;
 
-			 #if defined(ARDUINO_TEENSY41)
+			#if defined(ARDUINO_TEENSY41)
 				//Status LED Pins
 				const unsigned int status_led_r_pin = A7;
 				const unsigned int status_led_g_pin = A10;

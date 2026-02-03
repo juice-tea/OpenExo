@@ -232,7 +232,7 @@ class AnkleJoint : public _Joint
         ZeroTorque _zero_torque;                                /**< Zero torque controller */
         ProportionalJointMoment _proportional_joint_moment;     /**< Proportional joint moment controller */
         ZhangCollins _zhang_collins;                            /**< Zhang Collins controller */
-        Spline _spline;                                         /**< Spline controller */
+        Spline _spline;                                         /**< Spline controller */                                       /**< Pulse controller */
         ConstantTorque _constant_torque;                        /**< Constant torque controller*/
         TREC _trec;                                             /**< TREC */
 		CalibrManager _calibr_manager;                          /**< Calibration Manager "Controller" */
@@ -240,6 +240,7 @@ class AnkleJoint : public _Joint
         Step _step;                                             /**< Step Controller for Device Characterization */
         SPV2 _spv2;												/**< SPV2 */
 		PJMC_PLUS _pjmc_plus;									/**< The new proportional joint moment controller */
+        Pulse _pulse;    
 };
 
 /**

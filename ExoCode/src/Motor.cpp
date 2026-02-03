@@ -903,5 +903,144 @@ void MaxonMotor::maxon_manager(bool manager_active)
     }
 };
 
+/*
+ * Constructor for the PWM (Maxon) Motor.  
+ * We are using multilevel inheritance, so we have a general motor type, which is inherited by the PWM (e.g. Maxon) or other type (e.g. Maxon) since models within these types will share communication protocols, which is then inherited by the specific motor model, which may have specific torque constants etc.
+ */
+AKE60_8::AKE60_8(config_defs::joint_id id, ExoData* exo_data, int enable_pin) //Constructor: type is the motor type
+: _Motor(id, exo_data, enable_pin)
+{
+    JointData* j_data = exo_data->get_joint_with(static_cast<uint8_t>(id));
+    servo_left.attach(_ctrl_left_pin);//FIX attach to correct pin.
+    servo_right.attach(_ctrl_right_pin);//FIX attach to correct pin.
+    servo_left.writeMicroseconds(_pwm_neutral_val); //Set to neutral position
+    servo_right.writeMicroseconds(_pwm_neutral_val); //Set to neutral position
+    #ifdef MOTOR_DEBUG
+        logger::println("AKE60_8::AKE60_8: Leaving Constructor");
+    #endif
+};
+
+void AKE60_8::transaction(float torque)
+{
+    logger::print("Torque: ");
+    logger::print(torque);
+    //Send data
+    send_data(torque);
+
+    //Only enable the motor when it is an active trial 
+    master_switch();
+};
+
+bool AKE60_8::enable()
+{
+    return true;    //This function is currently bypassed for this motor at the moment.
+};
+
+bool AKE60_8::enable(bool overide)
+{	
+	//Only change the state and send messages if the enabled state (used as a master switch for this motor) has changed.
+    if ((_prev_motor_enabled != _motor_data->enabled) || overide)
+    {
+		if (_motor_data->enabled)   //_motor_data->enabled is controlled by the GUI
+		{
+            //Enable motor
+			digitalWrite(_enable_pin,HIGH);         //Relocate in the future
+		}
+
+		_enable_response = true;
+	}
+
+	if (!overide)                   //When enable(false), send the disable motor command, set the analogWrite resolution, and send 50% PWM command
+    {
+		_enable_response = false;
+		
+        //Disable motor, the message after this shouldn't matter as the power is cut, and the send() doesn't send a message if not enabled.
+		digitalWrite(_enable_pin,LOW);
+		analogWrite(_ctrl_right_pin,_pwm_neutral_val);
+		analogWrite(_ctrl_left_pin,_pwm_neutral_val);
+    }
+	
+	if (!_motor_data->enabled)   //_motor_data->enabled is controlled by the GUI
+		{
+            //Disable motor
+			digitalWrite(_enable_pin,LOW);         //Relocate in the future
+		}
+
+	_prev_motor_enabled = _motor_data->enabled;
+
+    return _enable_response;
+	
+    #ifdef MOTOR_DEBUG
+        logger::print(_prev_motor_enabled);
+        logger::print("\t");
+        logger::print(_motor_data->enabled);
+        logger::print("\t");
+        logger::print(_motor_data->is_on);
+        logger::print("\n");
+    #endif
+};
+
+void AKE60_8::send_data(float torque) //Always send motor command regardless of the motor "enable" status
+{
+    #ifdef MOTOR_DEBUG
+        logger::print("Sending data: ");
+        logger::print(uint32_t(_motor_data->id));
+        logger::print("\n");
+    #endif
+	
+	int direction_modifier = _motor_data->flip_direction ? -1 : 1; 
+
+	_motor_data->t_ff = torque;
+    _motor_data->last_command = torque;
+	
+	uint16_t exo_status = _data->get_status();
+    bool active_trial = (exo_status == status_defs::messages::trial_on) ||
+        (exo_status == status_defs::messages::fsr_calibration) ||
+        (exo_status == status_defs::messages::fsr_refinement);
+   
+	if (_data->user_paused || !active_trial || _data->estop)        //Ignores the exo error handler for the moment
+    {
+        servo_left.writeMicroseconds(_pwm_neutral_val);   //Set 50% PWM (0 current)
+    }
+    else
+    {
+		//Constrain the motor pwm command
+		uint16_t post_fuse_torque = max(_pwm_l_bound,_pwm_neutral_val+(direction_modifier*torque));    //Set the lowest allowed PWM command
+		post_fuse_torque = min(_pwm_u_bound,post_fuse_torque);                              //Set the highest allowed PWM command
+		int pulse_width = map(post_fuse_torque, 0, 4095, 1000, 2000); //Map to microseconds for servo library
+        servo_left.writeMicroseconds(pulse_width);	//Send the motor command to the
+        logger::print("Pulse Width: ");
+        logger::print(pulse_width);
+    }
+};
+
+void AKE60_8::master_switch()
+{
+   //Only run if the motor is supposed to be enabled
+    uint16_t exo_status = _data->get_status();
+    bool active_trial = (exo_status == status_defs::messages::trial_on) || 
+        (exo_status == status_defs::messages::fsr_calibration) ||
+        (exo_status == status_defs::messages::fsr_refinement);
+
+	if (_data->user_paused || !active_trial || _data->estop)
+    {
+		pinMode(_err_left_pin, INPUT_PULLUP);
+		pinMode(_err_right_pin, INPUT_PULLUP);
+		pinMode(_current_left_pin,INPUT);
+		pinMode(_current_right_pin,INPUT);
+		analogWriteResolution(12);
+		analogWriteFrequency(_ctrl_left_pin, 5000);
+		analogWriteFrequency(_ctrl_right_pin, 5000);
+		
+		//_motor_data->enabled = false;
+        enable(false);
+    }
+	else
+    {
+		//_motor_data->enabled = true;
+        enable(true);
+	}
+};
+
 
 #endif

@@ -108,6 +108,7 @@ namespace config_defs
         AK60v3 = 8,
         AK45_36 = 9,
         AK45_10 = 10,
+        AKE60_8 = 11,
     };
     
     enum class gearing : uint8_t            //Gearing ratio options
@@ -190,6 +191,7 @@ namespace config_defs
 		spv2 = 10,
 		pjmc_plus = 11,
         spline = 12,
+        pulse = 13,
 		
 		Count //Leave this at the end of the enum class. Count can be used to get the total number of controllers defined for this joint.
     };
@@ -469,11 +471,12 @@ namespace config_defs
             {"AK80", (uint8_t)config_defs::motor::AK80},
             {"AK60v1.1", (uint8_t)config_defs::motor::AK60v1_1},
             {"AK70", (uint8_t)config_defs::motor::AK70},
-			{"MaxonMotor", (uint8_t)config_defs::motor::MaxonMotor},
+            {"MaxonMotor", (uint8_t)config_defs::motor::MaxonMotor},
 			{"NullMotor", (uint8_t)config_defs::motor::NullMotor},
             {"AK60v3", (uint8_t)config_defs::motor::AK60v3},
             {"AK45_36", (uint8_t)config_defs::motor::AK45_36},
             {"AK45_10", (uint8_t)config_defs::motor::AK45_10},
+            {"AKE60_8", (uint8_t)config_defs::motor::AKE60_8},
         };
         
         const IniKeyCode gearing 
@@ -523,6 +526,7 @@ namespace config_defs
 			{"SPV2", (uint8_t)config_defs::ankle_controllers::spv2},
 			{"PJMC_PLUS", (uint8_t)config_defs::ankle_controllers::pjmc_plus},
             {"spline", (uint8_t)config_defs::ankle_controllers::spline},
+            {"pulse", (uint8_t)config_defs::ankle_controllers::pulse},
         };  
 
         const IniKeyCode elbow_controllers
