@@ -21,18 +21,18 @@
 	#define OpenExo_Board_V0_6_Maxon 5
 
     //Update the define below to match the board version being used
-    #define BOARD_VERSION AK_Board_V0_5_1 //Update this define to match the board version being used
+    #define BOARD_VERSION OpenExo_Board_V0_6_Maxon //Update this define to match the board version being used
 
 	#define BATTERY_SENSOR 0 //Set it to 0 to disable, 219 to use INA219, 260 to use INA260, 3 to use the OpenExo Board 0.5.1 Mark 3's onboard voltage divider
 	#define CRITICAL_BATT_VAL 18 //In volts. Battery voltage below this will trigger the low battery warning in the GUI.
 	#define RESISTOR_1 46700 //Set it to the measured resistance of R1 on the OpenExo Board 0.5.1 Mark 3, and update the volt_sense pin mapping in Board.h
 	#define RESISTOR_2 4670 //Set it to the measured resistance of R2 on the OpenExo Board 0.5.1 Mark 3, and update the volt_sense pin mapping in Board.h
-    #define REAL_TIME_I2C 1
+    #define REAL_TIME_I2C 0
     #define LOOP_FREQ_HZ 500
     #define LOOP_TIME_TOLERANCE 0.1 
     
     #define USE_SPEED_CHECK 0
-	#define USE_ANGLE_SENSORS 1
+	#define USE_ANGLE_SENSORS 0
 
     //MACRO magic to convert a define to a string
     #define VAL(str) #str
@@ -75,7 +75,7 @@
     namespace torque_calibration
     {
         const float AI_CNT_TO_V = 3.3 / 4096;   //Conversion from count to voltage
-        const float TRQ_V_TO_NM = 53.70;        //Conversion from voltage to Nm (Negative do to mismatch in torque sensor and motor torque directions) S12:(Left) = 39.8, S05 (Right) = 44.6; (These will be sensor specific).
+        const float TRQ_V_TO_NM = 43.90;        //Conversion from voltage to Nm (Negative do to mismatch in torque sensor and motor torque directions) S12:(Left) = 39.8, S05 (Right) = 44.6; (These will be sensor specific).
     }
 
     namespace BLE_times
