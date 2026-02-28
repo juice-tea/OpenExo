@@ -22,7 +22,7 @@ namespace ini_config
     const int buffer_length = 500;  /**< Length of the buffer for reading the file. */
     const int key_length = 25;      /**< Max length of the key name */
     const int section_length = 10;  /**< Max length of the section name */
-    const int number_of_keys = 71;  /**< Number of keys to be parsed. */
+    const int number_of_keys = 82;  /**< Number of keys to be parsed. */
 }
 
 //Reading the ini file from the SD card; 1 is the lowest value to confirm that data is present for sending over SPI
@@ -339,6 +339,18 @@ namespace config_defs
     static const int right_arm_1_torque_offset_idx = 68;
     static const int left_arm_2_torque_offset_idx = 69;
     static const int right_arm_2_torque_offset_idx = 70;
+
+    static const int max_torque_rate_in_idx = 71;
+    static const int max_torque_rate_in_cycle_limit_idx = 72;
+    static const int max_torque_in_idx = 73;
+    static const int max_torque_in_cycle_limit_idx = 74;
+    static const int max_desired_torque_idx = 75;
+    static const int max_desired_torque_rate_idx = 76;
+    static const int max_desired_torque_rate_cycle_limit_idx = 77;
+    static const int max_driver_torque_idx = 78;
+    static const int max_driver_torque_rate_idx = 79;
+    static const int max_driver_torque_rate_cycle_limit_idx = 80;
+    static const int static_driver_torque_cycle_limit_idx = 81;
 }
 
 #if defined(ARDUINO_TEENSY36)  || defined(ARDUINO_TEENSY41) 
@@ -670,6 +682,17 @@ namespace config_defs
         float left_arm_2_torque_offset;
         float right_arm_2_torque_offset;
 		
+        uint16_t maxTorqueRateIn;
+        uint8_t maxTorqueRateInCycleLimit;
+        uint8_t maxTorqueIn;
+        uint8_t maxTorqueInCycleLimit;
+        uint8_t maxDesiredTorque;
+        uint16_t maxDesiredTorqueRate;
+        uint8_t maxDesiredTorqueRateCycleLimit;
+        uint8_t maxDriverTorque;
+        uint16_t maxDriverTorqueRate;
+        uint8_t maxDriverTorqueRateCycleLimit;
+        uint8_t staticDriverTorqueCycleLimit;
     };
 #endif
 
