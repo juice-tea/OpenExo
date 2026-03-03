@@ -841,20 +841,23 @@ float Spline::calc_motor_cmd()
         _controller_data->parameters[controller_defs::spline::node4_y_idx],
         _controller_data->parameters[controller_defs::spline::node5_y_idx],
     };
-
+    //Ensure that the desired torque is limited to be within bounds of system specs.
     float torque_cmd = _spline_interpolate(x, y, percent_gait);
-    if (torque_cmd > 15.0f)
+    
+    if (abs(torque_cmd) > 21.0f)    // TODO: tie this value to SD config?
     {
-        torque_cmd = 15.0f;
-    }
-    else if (torque_cmd < -15.0f)
-    {
-        torque_cmd = -15.0f;
+        torque_cmd = 21.0f * (torque_cmd > 0 ? 1 : -1);
     }
 
     _controller_data->ff_setpoint = torque_cmd;
-    _controller_data->filtered_torque_reading = utils::ewma(_joint_data->torque_reading, _controller_data->filtered_torque_reading, 0.5f);
+    
+    //Apply HPF to the torque reading to remove response near zero.
+    _joint_data->torque_reading = (abs(_joint_data->torque_reading) > _controller_data->parameters[controller_defs::spline::torque_HPF_idx] ? _joint_data->torque_reading : 0);
 
+    //Apply exponential moving average filter to the torque reading to reduce noise.
+    _controller_data->filtered_torque_reading = utils::ewma(_joint_data->torque_reading, _controller_data->filtered_torque_reading, _controller_data->parameters[controller_defs::spline::torque_alpha_idx]);
+
+    //Calculate the commanded motor torque using PID control if desired, otherwise just use the feed-forward torque command.
     float cmd = 0.0f;
     if (_controller_data->parameters[controller_defs::spline::use_pid_idx] > 0.0f)
     {
@@ -868,9 +871,6 @@ float Spline::calc_motor_cmd()
     {
         cmd = torque_cmd;
     }
-
-    _controller_data->previous_cmd = cmd;
-    _controller_data->desired_torque = torque_cmd;
 
     return cmd;
 }

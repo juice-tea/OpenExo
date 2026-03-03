@@ -77,6 +77,7 @@ _Joint::_Joint(config_defs::joint_id id, ExoData* exo_data)
 void _Joint::read_data()  
 {
     //Read the torque sensor, and change sign based on side.
+    _joint_data->previous_torque_reading = _joint_data->torque_reading;   // Store previous torque reading for error checking
     _joint_data->torque_reading = (_joint_data->flip_direction ? -1.0 : 1.0) * _torque_sensor.read();
     
     _joint_data->position = _joint_data->motor.p / _joint_data->motor.gearing;
@@ -1104,13 +1105,10 @@ void AnkleJoint::run_joint()
     //Make sure the correct controller is running.
     set_controller(_joint_data->controller.controller);
 
-    //Calculate the motor command
-    _joint_data->controller.setpoint = _controller->calc_motor_cmd();
-
     //Check for joint errors
     static float start = micros();
 
-    //Check if the exo is in the correct state to run the error manager (i.e. not in a trial
+    // //Check if the exo is in the correct state to run the error manager (i.e. not in a trial
     const uint16_t exo_status = _data->get_status();
     const bool correct_status = (exo_status == status_defs::messages::trial_on) || 
             (exo_status == status_defs::messages::fsr_calibration) || 
@@ -1119,16 +1117,17 @@ void AnkleJoint::run_joint()
 
     if (error) 
     {
-        //_motor->set_error();
-        //_motor->on_off();
-        //_motor->enable();
-        
         //Send all errors to the other microcontroller
         for (int i=0; i < _error_manager.errorQueueSize(); i++)
         {
             ErrorReporter::get_instance()->report(_error_manager.popError(),_id);
         }
     }
+
+    //Calculate the motor command
+    _joint_data->controller.previous_setpoint = _joint_data->controller.setpoint;
+    _joint_data->controller.previous_desired_torque = _joint_data->controller.desired_torque;
+    _joint_data->controller.setpoint = _controller->calc_motor_cmd();
 
     // Boolean to check if the motor is an AK60v3.
     bool is_AK60v3 = (_joint_data->motor.motor_type == (uint8_t)config_defs::motor::AK60v3);

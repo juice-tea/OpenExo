@@ -132,6 +132,7 @@ _CANMotor::_CANMotor(config_defs::joint_id id, ExoData* exo_data, int enable_pin
 
     JointData* j_data = exo_data->get_joint_with(static_cast<uint8_t>(id));
     j_data->motor.kt = this->get_Kt();
+    j_data->motor.setpoint_to_torque = 1.0f;
 
     _enable_response = false;
 
@@ -684,6 +685,7 @@ MaxonMotor::MaxonMotor(config_defs::joint_id id, ExoData* exo_data, int enable_p
 : _Motor(id, exo_data, enable_pin)
 {
     JointData* j_data = exo_data->get_joint_with(static_cast<uint8_t>(id));
+    j_data->motor.setpoint_to_torque = (0.014f * 445.0f * 0.59f * 0.9f) / 204.8f;
 	
     #ifdef MOTOR_DEBUG
         logger::println("MaxonMotor::MaxonMotor: Leaving Constructor");

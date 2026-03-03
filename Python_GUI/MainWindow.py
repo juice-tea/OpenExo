@@ -110,6 +110,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Update Scan page status from device manager
         self.qt_dev.log.connect(self._on_dev_log)
         self.qt_dev.error.connect(self._on_dev_error)
+        self.qt_dev.deviceErrorReceived.connect(self._on_device_error_received)
         self.qt_dev.connected.connect(self._on_dev_connected)
         self.qt_dev.disconnected.connect(self._on_dev_disconnected)
 
@@ -543,6 +544,67 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.scan_page.btn_calibrate_torque.setEnabled(False)
             except Exception:
                 pass
+        except Exception:
+            pass
+
+    @QtCore.Slot(str)
+    def _on_device_error_received(self, msg: str):
+        try:
+            error_names = {
+                0: "No Error",
+                1: "Test Error",
+                2: "Poor State Variance Error",
+                3: "Poor Transmission Efficiency Error",
+                4: "Sensor Torque Clamp Error",
+                5: "Desired Torque Clamp Error",
+                6: "Driver Torque Clamp Error",
+                7: "Sensor Torque Rate Error",
+                8: "Desired Torque Rate Error",
+                9: "Driver Torque Rate Error",
+                10: "Torque Variance Error",
+                11: "Force Variance Error",
+                12: "Tracking Error",
+                13: "Motor Timeout Error",
+            }
+
+            joint_names = {
+                65: "Left Hip",
+                66: "Left Knee",
+                68: "Left Ankle",
+                72: "Left Elbow",
+                80: "Left Arm 1",
+                192: "Left Arm 2",
+                33: "Right Hip",
+                34: "Right Knee",
+                36: "Right Ankle",
+                40: "Right Elbow",
+                48: "Right Arm 1",
+                160: "Right Arm 2",
+            }
+
+            error_code = None
+            joint_id = None
+            if ":" in msg:
+                parts = msg.split(":", 1)
+                try:
+                    error_code = int(parts[0].strip())
+                    joint_id = int(parts[1].strip())
+                except Exception:
+                    error_code = None
+                    joint_id = None
+
+            if error_code is None or joint_id is None:
+                popup_text = f"Error received: {msg}"
+            else:
+                error_name = error_names.get(error_code, "Unknown Error")
+                joint_name = joint_names.get(joint_id, "Unknown Joint")
+                popup_text = (
+                    "Error received\n"
+                    f"Joint: {joint_name} ({joint_id})\n"
+                    f"Error: {error_name} ({error_code})"
+                )
+
+            QtWidgets.QMessageBox.warning(self, "Device Error", popup_text)
         except Exception:
             pass
 

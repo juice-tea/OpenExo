@@ -44,6 +44,7 @@ class MotorData
         float kp = 0;               /**< Proportional gain */
         float kd = 0;               /**< Derivative gain */
         float t_ff = 0;             /**< Torque command */
+        float setpoint_to_torque = 1.0f; /**< Conversion from controller setpoint units to Nm for fault checks. */
         
         bool do_zero;               /**< Flag to zero the position of the motor */
         bool enabled;               /**< Motor enable state*/

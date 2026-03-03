@@ -82,19 +82,198 @@ class PoorTransmissionEfficiencyError : public ErrorType
         }
 };
 
-class TorqueOutOfBoundsError : public ErrorType
+class SensorTorqueClampError : public ErrorType
 {
     public:
-        TorqueOutOfBoundsError() : ErrorType() {};
+        SensorTorqueClampError() : ErrorType() {};
 
         bool check(JointData* _data)
         {
-            return abs(_data->torque_reading) > _data->torque_output_threshold;
+            if (abs(_data->torque_reading) > _data->max_sensor_torque)
+            {
+                _data->max_sensor_torque_cycle_count++;
+                _data->torque_reading = 0.95 * _data->max_sensor_torque * (_data->torque_reading > 0 ? 1 : -1);   // Clamp value to max.
+                if (_data->max_sensor_torque_cycle_count >= _data->max_sensor_torque_cycle_limit)
+                {
+                    return true;
+                }
+            }
+            else 
+            {
+                _data->max_sensor_torque_cycle_count = 0;
+            }
+            return false;
         }
         void handle(JointData* _data)
         {
-            //_data->motor.enabled = false;
-            logger::println("Torque Out of Bounds Error", LogLevel::Error);
+            _data->motor.enabled = false;
+            logger::println("Sensor Torque Clamp Error", LogLevel::Error);
+        }
+};
+
+class DesiredTorqueClampError : public ErrorType
+{
+    public:
+        DesiredTorqueClampError() : ErrorType() {};
+
+        bool check(JointData* _data)
+        {
+            if (abs(_data->controller.desired_torque) > _data->max_desired_torque)
+            {
+                _data->max_desired_torque_cycle_count++;
+                _data->controller.desired_torque = _data->max_desired_torque * (_data->controller.desired_torque > 0 ? 1 : -1);   // Clamp value to max.
+                if (_data->max_desired_torque_cycle_count >= _data->max_desired_torque_cycle_limit)
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                _data->max_desired_torque_cycle_count = 0;    // Reset cycle count if we are not above the threshold
+            }
+            return false;
+        }
+        void handle(JointData* _data)
+        {
+            _data->motor.enabled = false;
+            logger::println("Desired Torque Clamp Error", LogLevel::Error);
+        }
+};
+
+class DriverTorqueClampError : public ErrorType
+{
+    public:
+        DriverTorqueClampError() : ErrorType() {};
+
+        bool check(JointData* _data)
+        {
+            if ((abs(_data->controller.setpoint) * (_data->motor.setpoint_to_torque)) > _data->max_driver_torque)
+            {
+                _data->max_driver_torque_cycle_count++;
+                _data->controller.setpoint = _data->max_driver_torque * (_data->controller.setpoint > 0 ? 1 : -1);   // Clamp value to max.
+                if (_data->max_driver_torque_cycle_count >= _data->max_driver_torque_cycle_limit)
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                _data->max_driver_torque_cycle_count = 0;    // Reset cycle count if we are not above the threshold
+            }
+            return false;
+        }
+        void handle(JointData* _data)
+        {
+            _data->motor.enabled = false;
+            logger::println("Driver Torque Clamp Error", LogLevel::Error);
+        }
+};
+
+class SensorTorqueRateError : public ErrorType
+{
+    public:
+        SensorTorqueRateError() : ErrorType() {};
+
+        bool check(JointData* _data)
+        {
+            if (abs(_data->torque_reading - _data->previous_torque_reading)/(1.8f) > _data->max_sensor_torque_rate)
+            {
+                _data->max_sensor_torque_rate_cycle_count++;
+                if (_data->torque_reading != 0)
+                {
+                    _data->torque_reading = _data->previous_torque_reading;   // Discard values that exceed rate limit unless value is going to zero.
+                }
+                else
+                {
+                    _data->torque_reading = _data->previous_torque_reading + ((_data->torque_reading-_data->previous_torque_reading) > 0 ? 1 : -1) * _data->max_sensor_torque_rate * 1.8f;  // If the torque reading is going to zero, allow it to go to zero but not beyond.
+                }
+                if (_data->max_sensor_torque_rate_cycle_count >= _data->max_sensor_torque_rate_cycle_limit)
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                _data->max_sensor_torque_rate_cycle_count = 0;    // Reset cycle count if we are not above the threshold
+            }
+            return false;
+        }
+        void handle(JointData* _data)
+        {
+            _data->motor.enabled = false;
+            logger::println("Sensor Torque Rate Error", LogLevel::Error);
+        }
+};
+
+class DesiredTorqueRateError : public ErrorType
+{
+    public:
+        DesiredTorqueRateError() : ErrorType() {};
+
+        bool check(JointData* _data)
+        {
+            if (abs(_data->controller.desired_torque - _data->controller.previous_desired_torque)/(1.8f) > _data->max_desired_torque_rate)
+            {
+                _data->max_desired_torque_rate_cycle_count++;
+                if (_data->controller.desired_torque != 0)
+                {
+                    _data->controller.desired_torque = _data->controller.previous_desired_torque;   // Discard values that exceed rate limit unless value is going to zero.
+                }
+                else
+                {
+                    _data->controller.desired_torque = _data->controller.previous_desired_torque + ((_data->controller.desired_torque-_data->controller.previous_desired_torque) > 0 ? 1 : -1) * _data->max_desired_torque_rate * 1.8f;  // If the desired torque is going to zero, allow it to go to zero but not beyond.
+                }
+                if (_data->max_desired_torque_rate_cycle_count >= _data->max_desired_torque_rate_cycle_limit)
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                _data->max_desired_torque_rate_cycle_count = 0;    // Reset cycle count if we are not above the threshold
+            }
+            return false;
+        }
+        void handle(JointData* _data)
+        {
+            _data->motor.enabled = false;
+            logger::println("Desired Torque Rate Error", LogLevel::Error);
+        }
+};
+
+class DriverTorqueRateError : public ErrorType
+{
+    public:
+        DriverTorqueRateError() : ErrorType() {};
+
+        bool check(JointData* _data)
+        {
+            if ((abs(_data->controller.setpoint - _data->controller.previous_setpoint) * (_data->motor.setpoint_to_torque))/(1.8f) > _data->max_driver_torque_rate)
+            {
+                _data->max_driver_torque_rate_cycle_count++;
+                if (_data->controller.setpoint != 0)
+                {
+                    _data->controller.setpoint = _data->controller.previous_setpoint;   // Discard values that exceed rate limit unless value is going to zero.
+                }
+                else
+                {
+                    _data->controller.setpoint = _data->controller.previous_setpoint + ((_data->controller.setpoint-_data->controller.previous_setpoint) > 0 ? 1 : -1) * _data->max_driver_torque_rate * 1.8f;  // If the setpoint is going to zero, allow it to go to zero but not beyond.
+                }
+                if (_data->max_driver_torque_rate_cycle_count >= _data->max_driver_torque_rate_cycle_limit)
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                _data->max_driver_torque_rate_cycle_count = 0;    // Reset cycle count if we are not above the threshold
+            }
+            return false;
+        }
+        void handle(JointData* _data)
+        {
+            _data->motor.enabled = false;
+            logger::println("Driver Torque Rate Error", LogLevel::Error);
         }
 };
 
@@ -179,7 +358,7 @@ class MotorTimeoutError : public ErrorType
         }
         void handle(JointData* _data)
         {
-            //_data->motor.enabled = false;
+            _data->motor.enabled = false;
             logger::println("Motor Timeout Error", LogLevel::Error);
         }
 };

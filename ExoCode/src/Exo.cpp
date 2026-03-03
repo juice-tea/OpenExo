@@ -67,15 +67,8 @@ bool Exo::run()
     
     if (delta_t >= (lower_bound))
     {    
-        #if USE_SPEED_CHECK
-            logger::print(String(delta_t) + "\n");
-            speed_check.toggle();
-        #endif
-
-        //Check if we should update the sync LED and record the LED on/off state.
-        data->sync_led_state = sync_led.handler();
-        bool trial_running = sync_led.get_is_blinking();
-
+        startTime = micros();
+        
         //Check the estop
         data->estop = 0;    // By default, the estop functionality is disabled. To enable it, comment this line out and uncomment the line below.
         //data->estop = digitalRead(logic_micro_pins::motor_stop_pin);
@@ -85,10 +78,20 @@ bool Exo::run()
         {
             data->for_each_joint([](JointData* j_data, float* args){j_data->motor.enabled = false;});
         }
-		
+        
         //Record the side data and send new commands to the motors.
         left_side.run_side();
         right_side.run_side();
+        
+         //Check if we just entered a new status, and if so, reset the sync LED to be in sync with the new status.
+        #if USE_SPEED_CHECK
+            logger::print(String(delta_t) + "\n");
+            speed_check.toggle();
+        #endif
+
+        //Check if we should update the sync LED and record the LED on/off state.
+        data->sync_led_state = sync_led.handler();
+        bool trial_running = sync_led.get_is_blinking();
 		
         //Update status LED
         status_led.update(data->get_status());

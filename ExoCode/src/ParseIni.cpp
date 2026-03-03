@@ -542,47 +542,55 @@
         data.right_arm_2_torque_offset = atof(buffer);
         config_to_send[config_defs::right_arm_2_torque_offset_idx] = data.right_arm_2_torque_offset;
 
-        get_section_key(ini,"Exo","maxTorqueRateIn",buffer,buffer_len);
-        data.max_torque_rate_in = atof(buffer);
-        config_to_send[config_defs::max_torque_rate_in_idx] = data.max_torque_rate_in;
+        get_section_key(ini,"Exo","max_sensor_torque_rate",buffer,buffer_len);
+        data.max_sensor_torque_rate = atof(buffer);
+        config_to_send[config_defs::max_torque_rate_in_idx] = data.max_sensor_torque_rate;
 
-        get_section_key(ini,"Exo","maxTorqueRateInCycleLimit",buffer,buffer_len);
-        data.max_torque_rate_in_cycle_limit = atof(buffer);
-        config_to_send[config_defs::max_torque_rate_in_cycle_limit_idx] = data.max_torque_rate_in_cycle_limit;
+        get_section_key(ini,"Exo","max_sensor_torque_rate_cycle_limit",buffer,buffer_len);
+        data.max_sensor_torque_rate_cycle_limit = atof(buffer);
+        config_to_send[config_defs::max_torque_rate_in_cycle_limit_idx] = data.max_sensor_torque_rate_cycle_limit;
 
-        get_section_key(ini,"Exo","maxTorqueIn",buffer,buffer_len);
-        data.max_torque_in = atof(buffer);
-        config_to_send[config_defs::max_torque_in_idx] = data.max_torque_in;
+        get_section_key(ini,"Exo","max_sensor_torque",buffer,buffer_len);
+        data.max_sensor_torque = atof(buffer);
+        config_to_send[config_defs::max_torque_in_idx] = data.max_sensor_torque;
 
-        get_section_key(ini,"Exo","maxTorqueInCycleLimit",buffer,buffer_len);
-        data.max_torque_in_cycle_limit = atof(buffer);
-        config_to_send[config_defs::max_torque_in_cycle_limit_idx] = data.max_torque_in_cycle_limit;
+        get_section_key(ini,"Exo","max_sensor_torque_cycle_limit",buffer,buffer_len);
+        data.max_sensor_torque_cycle_limit = atof(buffer);
+        config_to_send[config_defs::max_torque_in_cycle_limit_idx] = data.max_sensor_torque_cycle_limit;
 
-        get_section_key(ini,"Exo","maxDesiredTorque",buffer,buffer_len);
+        get_section_key(ini,"Exo","max_desired_torque",buffer,buffer_len);
         data.max_desired_torque = atof(buffer);
         config_to_send[config_defs::max_desired_torque_idx] = data.max_desired_torque;
 
-        get_section_key(ini,"Exo","maxDesiredTorqueRate",buffer,buffer_len);
+        get_section_key(ini,"Exo","max_desired_torque_cycle_limit",buffer,buffer_len);
+        data.max_desired_torque_cycle_limit = atof(buffer);
+        config_to_send[config_defs::max_desired_torque_cycle_limit_idx] = data.max_desired_torque_cycle_limit;
+
+        get_section_key(ini,"Exo","max_desired_torque_rate",buffer,buffer_len);
         data.max_desired_torque_rate = atof(buffer);
         config_to_send[config_defs::max_desired_torque_rate_idx] = data.max_desired_torque_rate;
 
-        get_section_key(ini,"Exo","maxDesiredTorqueRateCycleLimit",buffer,buffer_len);
+        get_section_key(ini,"Exo","max_desired_torque_rate_cycle_limit",buffer,buffer_len);
         data.max_desired_torque_rate_cycle_limit = atof(buffer);
         config_to_send[config_defs::max_desired_torque_rate_cycle_limit_idx] = data.max_desired_torque_rate_cycle_limit;
 
-        get_section_key(ini,"Exo","maxDriverTorque",buffer,buffer_len);
+        get_section_key(ini,"Exo","max_driver_torque",buffer,buffer_len);
         data.max_driver_torque = atof(buffer);
         config_to_send[config_defs::max_driver_torque_idx] = data.max_driver_torque;
 
-        get_section_key(ini,"Exo","maxDriverTorqueRate",buffer,buffer_len);
+        get_section_key(ini,"Exo","max_driver_torque_cycle_limit",buffer,buffer_len);
+        data.max_driver_torque_cycle_limit = atof(buffer);
+        config_to_send[config_defs::max_driver_torque_cycle_limit_idx] = data.max_driver_torque_cycle_limit;
+
+        get_section_key(ini,"Exo","max_driver_torque_rate",buffer,buffer_len);
         data.max_driver_torque_rate = atof(buffer);
         config_to_send[config_defs::max_driver_torque_rate_idx] = data.max_driver_torque_rate;
 
-        get_section_key(ini,"Exo","maxDriverTorqueRateCycleLimit",buffer,buffer_len);
+        get_section_key(ini,"Exo","max_driver_torque_rate_cycle_limit",buffer,buffer_len);
         data.max_driver_torque_rate_cycle_limit = atof(buffer);
         config_to_send[config_defs::max_driver_torque_rate_cycle_limit_idx] = data.max_driver_torque_rate_cycle_limit;
 
-        get_section_key(ini,"Exo","staticDriverTorqueCycleLimit",buffer,buffer_len);
+        get_section_key(ini,"Exo","static_driver_torque_cycle_limit",buffer,buffer_len);
         data.static_driver_torque_cycle_limit = atof(buffer);
         config_to_send[config_defs::static_driver_torque_cycle_limit_idx] = data.static_driver_torque_cycle_limit;
     }

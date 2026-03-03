@@ -19,6 +19,7 @@ JointData::JointData(config_defs::joint_id id, uint8_t* config_to_send, float jo
     this->id = id;
     
     this->torque_reading = 0;
+    this->previous_torque_reading = 0;
     this->is_left = ((uint8_t)this->id & (uint8_t)config_defs::joint_id::left) == (uint8_t)config_defs::joint_id::left;
     
     this->position = 0;
@@ -28,6 +29,20 @@ JointData::JointData(config_defs::joint_id id, uint8_t* config_to_send, float jo
     this->joint_global_angle = 0;
     this->prev_joint_position = 0;
     this->joint_velocity = 0;
+
+    this->max_sensor_torque = config_to_send[config_defs::max_torque_in_idx];
+    this->max_desired_torque = config_to_send[config_defs::max_desired_torque_idx];
+    this->max_driver_torque = config_to_send[config_defs::max_driver_torque_idx];
+
+    this->max_sensor_torque_cycle_limit = config_to_send[config_defs::max_torque_in_cycle_limit_idx];
+    this->max_sensor_torque_rate = config_to_send[config_defs::max_torque_rate_in_idx];
+    this->max_sensor_torque_rate_cycle_limit = config_to_send[config_defs::max_torque_rate_in_cycle_limit_idx];
+
+    this->max_desired_torque_rate = config_to_send[config_defs::max_desired_torque_rate_idx];
+    this->max_desired_torque_rate_cycle_limit = config_to_send[config_defs::max_desired_torque_rate_cycle_limit_idx];
+    this->max_driver_torque_rate = config_to_send[config_defs::max_driver_torque_rate_idx];
+    this->max_driver_torque_rate_cycle_limit = config_to_send[config_defs::max_driver_torque_rate_cycle_limit_idx];
+    this->static_driver_torque_cycle_limit = config_to_send[config_defs::static_driver_torque_cycle_limit_idx];
     
     switch ((uint8_t)this->id & (~(uint8_t)config_defs::joint_id::left & ~(uint8_t)config_defs::joint_id::right))  //Use the id with the side masked out.
     {
@@ -209,6 +224,20 @@ JointData::JointData(config_defs::joint_id id, uint8_t* config_to_send, float jo
 
 void JointData::reconfigure(uint8_t* config_to_send) 
 {
+    this->max_sensor_torque = config_to_send[config_defs::max_torque_in_idx];
+    this->max_desired_torque = config_to_send[config_defs::max_desired_torque_idx];
+    this->max_driver_torque = config_to_send[config_defs::max_driver_torque_idx];
+
+    this->max_sensor_torque_cycle_limit = config_to_send[config_defs::max_torque_in_cycle_limit_idx];
+    this->max_sensor_torque_rate = config_to_send[config_defs::max_torque_rate_in_idx];
+    this->max_sensor_torque_rate_cycle_limit = config_to_send[config_defs::max_torque_rate_in_cycle_limit_idx];
+
+    this->max_desired_torque_rate = config_to_send[config_defs::max_desired_torque_rate_idx];
+    this->max_desired_torque_rate_cycle_limit = config_to_send[config_defs::max_desired_torque_rate_cycle_limit_idx];
+    this->max_driver_torque_rate = config_to_send[config_defs::max_driver_torque_rate_idx];
+    this->max_driver_torque_rate_cycle_limit = config_to_send[config_defs::max_driver_torque_rate_cycle_limit_idx];
+    this->static_driver_torque_cycle_limit = config_to_send[config_defs::static_driver_torque_cycle_limit_idx];
+    
     switch ((uint8_t)this->id & (~(uint8_t)config_defs::joint_id::left & ~(uint8_t)config_defs::joint_id::right))  //Use the id with the side masked out.
     {
         case (uint8_t)config_defs::joint_id::hip:
