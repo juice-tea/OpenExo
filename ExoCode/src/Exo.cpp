@@ -67,8 +67,6 @@ bool Exo::run()
     
     if (delta_t >= (lower_bound))
     {    
-        startTime = micros();
-        
         //Check the estop
         data->estop = 0;    // By default, the estop functionality is disabled. To enable it, comment this line out and uncomment the line below.
         //data->estop = digitalRead(logic_micro_pins::motor_stop_pin);

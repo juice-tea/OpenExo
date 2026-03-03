@@ -29,6 +29,8 @@
 
 #define MAX_RX_LEN 64       //Bytes
 #define RX_TIMEOUT_US 1000  //Microseconds
+#define UART_USE_CRC 1
+#define UART_USE_TYPED_RT_PACKET 1
 
 /* SLIP special character codes */
 #define END             0300    /* Indicates end of packet */
@@ -106,6 +108,16 @@ class UARTHandler
         uint8_t _recv_char(void);
 
         uint8_t _time_left(uint8_t should_latch = 0);
+
+        bool _should_use_typed_rt_packet(uint8_t msg_id, uint8_t len);
+
+        uint8_t _pack_typed_rt_payload(float *data, uint8_t *payload);
+
+        bool _unpack_typed_rt_payload(uint8_t *data, uint8_t len, UART_msg_t &msg);
+
+        uint8_t _crc8(const uint8_t* data, uint8_t len);
+
+        bool _verify_crc(uint8_t* data, uint8_t& len);
 
         void _reset_partial_packet();
 

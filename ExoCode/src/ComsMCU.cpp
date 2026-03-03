@@ -152,7 +152,7 @@ void ComsMCU::update_gui()
 
     static Time_Helper* t_helper = Time_Helper::get_instance();
     static float my_mark = _data->mark;
-    static float* rt_floats = new float(rt_data::len);
+    static float* rt_floats = new float[rt_data::len];
 
     //Get real time data from ExoData and send to GUI
     const bool new_rt_data = real_time_i2c::poll(rt_floats);

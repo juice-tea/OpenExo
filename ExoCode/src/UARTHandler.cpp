@@ -26,6 +26,10 @@ typedef enum
   DATA_START = 2
 } UARTPackingIndex;
 
+static const uint8_t UART_CMD_UPDATE_REAL_TIME_DATA = 0x12;
+static const uint8_t UART_TYPED_RT_FLOAT_COUNT = 11;
+static const uint8_t UART_TYPED_RT_PAYLOAD_LEN = 16;
+
 
 UARTHandler::UARTHandler()
 {
@@ -59,7 +63,6 @@ void UARTHandler::UART_msg(uint8_t msg_id, uint8_t len, uint8_t joint_id, float 
    }
    logger::println();
     #endif
-
     _send_packet(_byte_data, _packed_len);
     MY_SERIAL.flush();
 
@@ -114,7 +117,15 @@ UART_msg_t UARTHandler::poll(float timeout_us)
        _reset_partial_packet();
      }
 
-      UART_msg_t msg = _unpack(_msg_buffer, _recv_len);
+      uint8_t validated_len = (uint8_t)_recv_len;
+    #if UART_USE_CRC
+      if (!_verify_crc(_msg_buffer, validated_len))
+      {
+        return empty_msg;
+      }
+    #endif
+
+      UART_msg_t msg = _unpack(_msg_buffer, validated_len);
 
       #if DEBUG_UART_HANDLER
           logger::print("UARTHandler::poll->Got Message: ");
@@ -143,7 +154,16 @@ UART_msg_t UARTHandler::poll(float timeout_us)
           logger::println();
       #endif
 
-      UART_msg_t msg = _unpack(_msg_buffer, _partial_packet_len);
+      uint8_t validated_len = _partial_packet_len;
+    #if UART_USE_CRC
+      if (!_verify_crc(_msg_buffer, validated_len))
+      {
+        _reset_partial_packet();
+        return empty_msg;
+      }
+    #endif
+
+      UART_msg_t msg = _unpack(_msg_buffer, validated_len);
 
       _reset_partial_packet();
 
@@ -167,6 +187,14 @@ void UARTHandler::_pack(uint8_t msg_id, uint8_t len, uint8_t joint_id, float *da
     //Pack metadata
     data_to_pack[COMMAND] = msg_id;
     data_to_pack[JOINT_ID] = joint_id;
+
+#if UART_USE_TYPED_RT_PACKET
+  if (_should_use_typed_rt_packet(msg_id, len))
+  {
+    _pack_typed_rt_payload(data, data_to_pack + DATA_START);
+    return;
+  }
+#endif
     
     //Pack payload with platform-specific encoding.
 #if UART_PACK_FLOATS
@@ -190,6 +218,14 @@ void UARTHandler::_pack(uint8_t msg_id, uint8_t len, uint8_t joint_id, float *da
 UART_msg_t UARTHandler::_unpack(uint8_t* data, uint8_t len)
 {
     UART_msg_t msg;
+
+#if UART_USE_TYPED_RT_PACKET
+  if (_unpack_typed_rt_payload(data, len, msg))
+  {
+    return msg;
+  }
+#endif
+
     msg.command = data[COMMAND];
     msg.joint_id = data[JOINT_ID];
     float _total_len = len*sizeof(uint8_t);
@@ -222,6 +258,16 @@ UART_msg_t UARTHandler::_unpack(uint8_t* data, uint8_t len)
 
 uint8_t UARTHandler::_get_packed_length(uint8_t msg_id, uint8_t len, uint8_t joint_id, float *data)
 {
+  (void)joint_id;
+  (void)data;
+
+#if UART_USE_TYPED_RT_PACKET
+  if (_should_use_typed_rt_packet(msg_id, len))
+  {
+    return DATA_START + UART_TYPED_RT_PAYLOAD_LEN;
+  }
+#endif
+
     uint8_t _val = 0;
 #if UART_PACK_FLOATS
     _val += (float)len * sizeof(float);
@@ -259,6 +305,9 @@ uint8_t UARTHandler::_recv_char(void)
 /* SEND_PACKET: sends a packet of length "len", starting at location "p". */
 void UARTHandler::_send_packet(uint8_t* p, uint8_t len)
 {
+  uint8_t* payload_start = p;
+  const uint8_t payload_len = len;
+
   /* Send an initial END character to flush out any data that may have accumulated in the receiver due to line noise */
   _send_char(END);
 
@@ -285,6 +334,25 @@ void UARTHandler::_send_packet(uint8_t* p, uint8_t len)
 
     p++;
   }
+
+#if UART_USE_CRC
+  uint8_t crc = _crc8(payload_start, payload_len);
+
+  switch (crc)
+  {
+    case END:
+      _send_char(ESC);
+      _send_char(ESC_END);
+      break;
+    case ESC:
+      _send_char(ESC);
+      _send_char(ESC_ESC);
+      break;
+    default:
+      _send_char(crc);
+      break;
+  }
+#endif
 
   /* Tell the receiver that we're done sending the packet */
   _send_char(END);
@@ -397,6 +465,12 @@ int UARTHandler::_recv_packet(uint8_t *p, uint8_t len)
   int prior_packet_len = _partial_packet_len;
   _partial_packet_len += received;
 
+  if (_partial_packet_len > MAX_RX_LEN)
+  {
+    _reset_partial_packet();
+    return 0;
+  }
+
   #if DEBUG_UART_HANDLER
       logger::println("UARTHandler::_recv_packet->Timeout!");
       logger::print("UARTHandler::_recv_packet->Saved Bytes: "); 
@@ -410,7 +484,7 @@ int UARTHandler::_recv_packet(uint8_t *p, uint8_t len)
       logger::println(_partial_packet_len);
   #endif
 
-  for (int i=0; i<(_partial_packet_len); i++)
+  for (int i=0; i<received; i++)
   {
     _partial_packet[i+prior_packet_len] = p[i];
 
@@ -448,4 +522,175 @@ void UARTHandler::_reset_partial_packet()
 {
   memset(_partial_packet, 0, _partial_packet_len);
   _partial_packet_len = 0;
+}
+
+bool UARTHandler::_should_use_typed_rt_packet(uint8_t msg_id, uint8_t len)
+{
+  return (msg_id == UART_CMD_UPDATE_REAL_TIME_DATA) && (len == UART_TYPED_RT_FLOAT_COUNT);
+}
+
+uint8_t UARTHandler::_pack_typed_rt_payload(float *data, uint8_t *payload)
+{
+  auto to_i16_scaled_100 = [](float value) -> int16_t
+  {
+    float scaled = value * 100.0f;
+    if (scaled > 32767.0f)
+    {
+      scaled = 32767.0f;
+    }
+    else if (scaled < -32768.0f)
+    {
+      scaled = -32768.0f;
+    }
+    return (int16_t)(scaled >= 0.0f ? (scaled + 0.5f) : (scaled - 0.5f));
+  };
+
+  auto clamp_u8 = [](float value, uint8_t max_val) -> uint8_t
+  {
+    if (value <= 0.0f)
+    {
+      return 0;
+    }
+    if (value >= (float)max_val)
+    {
+      return max_val;
+    }
+    return (uint8_t)(value + 0.5f);
+  };
+
+  auto to_bool_bit = [](float value) -> uint8_t
+  {
+    return value >= 0.5f ? 1 : 0;
+  };
+
+  int16_t left_setpoint = to_i16_scaled_100(data[0]);
+  int16_t left_sensor = to_i16_scaled_100(data[1]);
+  int16_t right_setpoint = to_i16_scaled_100(data[2]);
+  int16_t right_sensor = to_i16_scaled_100(data[3]);
+
+  payload[0] = (uint8_t)(left_setpoint & 0xFF);
+  payload[1] = (uint8_t)((left_setpoint >> 8) & 0xFF);
+  payload[2] = (uint8_t)(left_sensor & 0xFF);
+  payload[3] = (uint8_t)((left_sensor >> 8) & 0xFF);
+
+  payload[4] = clamp_u8(data[4], 255);
+
+  uint8_t flags = 0;
+  flags |= to_bool_bit(data[5]) << 0;
+  flags |= to_bool_bit(data[7]) << 1;
+  flags |= to_bool_bit(data[8]) << 2;
+  payload[5] = flags;
+
+  payload[6] = (uint8_t)(right_setpoint & 0xFF);
+  payload[7] = (uint8_t)((right_setpoint >> 8) & 0xFF);
+  payload[8] = (uint8_t)(right_sensor & 0xFF);
+  payload[9] = (uint8_t)((right_sensor >> 8) & 0xFF);
+
+  payload[10] = clamp_u8(data[6], 255);
+
+  float time_ms_f = data[9] * 1000.0f;
+  if (time_ms_f < 0.0f)
+  {
+    time_ms_f = 0.0f;
+  }
+  if (time_ms_f > 4294967295.0f)
+  {
+    time_ms_f = 4294967295.0f;
+  }
+  uint32_t time_ms = (uint32_t)(time_ms_f + 0.5f);
+
+  payload[11] = (uint8_t)(time_ms & 0xFF);
+  payload[12] = (uint8_t)((time_ms >> 8) & 0xFF);
+  payload[13] = (uint8_t)((time_ms >> 16) & 0xFF);
+  payload[14] = (uint8_t)((time_ms >> 24) & 0xFF);
+
+  payload[15] = clamp_u8(data[10], 100);
+
+  return UART_TYPED_RT_PAYLOAD_LEN;
+}
+
+bool UARTHandler::_unpack_typed_rt_payload(uint8_t *data, uint8_t len, UART_msg_t &msg)
+{
+  if (!_should_use_typed_rt_packet(data[COMMAND], UART_TYPED_RT_FLOAT_COUNT))
+  {
+    return false;
+  }
+
+  if (len != (DATA_START + UART_TYPED_RT_PAYLOAD_LEN))
+  {
+    return false;
+  }
+
+  uint8_t *payload = data + DATA_START;
+
+  auto i16_to_float_scaled_100 = [](uint8_t lo, uint8_t hi) -> float
+  {
+    int16_t raw = (int16_t)((uint16_t)lo | ((uint16_t)hi << 8));
+    return ((float)raw) / 100.0f;
+  };
+
+  msg.command = data[COMMAND];
+  msg.joint_id = data[JOINT_ID];
+  msg.len = UART_TYPED_RT_FLOAT_COUNT;
+
+  msg.data[0] = i16_to_float_scaled_100(payload[0], payload[1]);
+  msg.data[1] = i16_to_float_scaled_100(payload[2], payload[3]);
+  msg.data[2] = i16_to_float_scaled_100(payload[6], payload[7]);
+  msg.data[3] = i16_to_float_scaled_100(payload[8], payload[9]);
+  msg.data[4] = (float)payload[4];
+  msg.data[5] = (float)((payload[5] >> 0) & 0x01);
+  msg.data[6] = (float)payload[10];
+  msg.data[7] = (float)((payload[5] >> 1) & 0x01);
+  msg.data[8] = (float)((payload[5] >> 2) & 0x01);
+
+  uint32_t time_ms =
+      ((uint32_t)payload[11]) |
+      ((uint32_t)payload[12] << 8) |
+      ((uint32_t)payload[13] << 16) |
+      ((uint32_t)payload[14] << 24);
+  msg.data[9] = ((float)time_ms) / 1000.0f;
+  msg.data[10] = (float)payload[15];
+
+  return true;
+}
+
+uint8_t UARTHandler::_crc8(const uint8_t* data, uint8_t len)
+{
+  uint8_t crc = 0x00;
+  for (uint8_t i = 0; i < len; i++)
+  {
+    crc ^= data[i];
+    for (uint8_t bit = 0; bit < 8; bit++)
+    {
+      if (crc & 0x80)
+      {
+        crc = (crc << 1) ^ 0x07;
+      }
+      else
+      {
+        crc <<= 1;
+      }
+    }
+  }
+  return crc;
+}
+
+bool UARTHandler::_verify_crc(uint8_t* data, uint8_t& len)
+{
+  if (len < 3)
+  {
+    return false;
+  }
+
+  const uint8_t payload_len = len - 1;
+  const uint8_t received_crc = data[payload_len];
+  const uint8_t computed_crc = _crc8(data, payload_len);
+
+  if (received_crc != computed_crc)
+  {
+    return false;
+  }
+
+  len = payload_len;
+  return true;
 }
