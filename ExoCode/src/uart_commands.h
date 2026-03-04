@@ -253,6 +253,43 @@ namespace UART_command_handlers
         tx_msg.data[config_defs::elbow_flip_angle_dir_idx] = exo_data->config[config_defs::elbow_flip_angle_dir_idx];
         tx_msg.data[config_defs::arm_1_flip_angle_dir_idx] = exo_data->config[config_defs::arm_1_flip_angle_dir_idx];
         tx_msg.data[config_defs::arm_2_flip_angle_dir_idx] = exo_data->config[config_defs::arm_2_flip_angle_dir_idx];
+        tx_msg.data[config_defs::left_hip_RoM_idx] = exo_data->config[config_defs::left_hip_RoM_idx];
+        tx_msg.data[config_defs::right_hip_RoM_idx] = exo_data->config[config_defs::right_hip_RoM_idx];
+        tx_msg.data[config_defs::left_knee_RoM_idx] = exo_data->config[config_defs::left_knee_RoM_idx];
+        tx_msg.data[config_defs::right_knee_RoM_idx] = exo_data->config[config_defs::right_knee_RoM_idx];
+        tx_msg.data[config_defs::left_ankle_RoM_idx] = exo_data->config[config_defs::left_ankle_RoM_idx];
+        tx_msg.data[config_defs::right_ankle_RoM_idx] = exo_data->config[config_defs::right_ankle_RoM_idx];
+        tx_msg.data[config_defs::left_elbow_RoM_idx] = exo_data->config[config_defs::left_elbow_RoM_idx];
+        tx_msg.data[config_defs::right_elbow_RoM_idx] = exo_data->config[config_defs::right_elbow_RoM_idx];
+        tx_msg.data[config_defs::left_arm_1_RoM_idx] = exo_data->config[config_defs::left_arm_1_RoM_idx];
+        tx_msg.data[config_defs::right_arm_1_RoM_idx] = exo_data->config[config_defs::right_arm_1_RoM_idx];
+        tx_msg.data[config_defs::left_arm_2_RoM_idx] = exo_data->config[config_defs::left_arm_2_RoM_idx];
+        tx_msg.data[config_defs::right_arm_2_RoM_idx] = exo_data->config[config_defs::right_arm_2_RoM_idx];
+        tx_msg.data[config_defs::left_hip_torque_offset_idx] = exo_data->config[config_defs::left_hip_torque_offset_idx];
+        tx_msg.data[config_defs::right_hip_torque_offset_idx] = exo_data->config[config_defs::right_hip_torque_offset_idx];
+        tx_msg.data[config_defs::left_knee_torque_offset_idx] = exo_data->config[config_defs::left_knee_torque_offset_idx];
+        tx_msg.data[config_defs::right_knee_torque_offset_idx] = exo_data->config[config_defs::right_knee_torque_offset_idx];
+        tx_msg.data[config_defs::left_ankle_torque_offset_idx] = exo_data->config[config_defs::left_ankle_torque_offset_idx];
+        tx_msg.data[config_defs::right_ankle_torque_offset_idx] = exo_data->config[config_defs::right_ankle_torque_offset_idx];
+        tx_msg.data[config_defs::left_elbow_torque_offset_idx] = exo_data->config[config_defs::left_elbow_torque_offset_idx];
+        tx_msg.data[config_defs::right_elbow_torque_offset_idx] = exo_data->config[config_defs::right_elbow_torque_offset_idx];
+        tx_msg.data[config_defs::left_arm_1_torque_offset_idx] = exo_data->config[config_defs::left_arm_1_torque_offset_idx];
+        tx_msg.data[config_defs::right_arm_1_torque_offset_idx] = exo_data->config[config_defs::right_arm_1_torque_offset_idx];
+        tx_msg.data[config_defs::left_arm_2_torque_offset_idx] = exo_data->config[config_defs::left_arm_2_torque_offset_idx];
+        tx_msg.data[config_defs::right_arm_2_torque_offset_idx] = exo_data->config[config_defs::right_arm_2_torque_offset_idx];
+        tx_msg.data[config_defs::max_torque_rate_in_idx] = exo_data->config[config_defs::max_torque_rate_in_idx];
+        tx_msg.data[config_defs::max_torque_rate_in_cycle_limit_idx] = exo_data->config[config_defs::max_torque_rate_in_cycle_limit_idx];
+        tx_msg.data[config_defs::max_torque_in_idx] = exo_data->config[config_defs::max_torque_in_idx];
+        tx_msg.data[config_defs::max_torque_in_cycle_limit_idx] = exo_data->config[config_defs::max_torque_in_cycle_limit_idx];
+        tx_msg.data[config_defs::max_desired_torque_idx] = exo_data->config[config_defs::max_desired_torque_idx];
+        tx_msg.data[config_defs::max_desired_torque_cycle_limit_idx] = exo_data->config[config_defs::max_desired_torque_cycle_limit_idx];
+        tx_msg.data[config_defs::max_desired_torque_rate_idx] = exo_data->config[config_defs::max_desired_torque_rate_idx];
+        tx_msg.data[config_defs::max_desired_torque_rate_cycle_limit_idx] = exo_data->config[config_defs::max_desired_torque_rate_cycle_limit_idx];
+        tx_msg.data[config_defs::max_driver_torque_idx] = exo_data->config[config_defs::max_driver_torque_idx];
+        tx_msg.data[config_defs::max_driver_torque_cycle_limit_idx] = exo_data->config[config_defs::max_driver_torque_cycle_limit_idx];
+        tx_msg.data[config_defs::max_driver_torque_rate_idx] = exo_data->config[config_defs::max_driver_torque_rate_idx];
+        tx_msg.data[config_defs::max_driver_torque_rate_cycle_limit_idx] = exo_data->config[config_defs::max_driver_torque_rate_cycle_limit_idx];
+        tx_msg.data[config_defs::static_driver_torque_cycle_limit_idx] = exo_data->config[config_defs::static_driver_torque_cycle_limit_idx];
 
         handler->UART_msg(tx_msg);
         // logger::println("UART_command_handlers::get_config->sent updated config");
@@ -308,6 +345,51 @@ namespace UART_command_handlers
         exo_data->config[config_defs::elbow_flip_angle_dir_idx] = msg.data[config_defs::elbow_flip_angle_dir_idx];
         exo_data->config[config_defs::arm_1_flip_angle_dir_idx] = msg.data[config_defs::arm_1_flip_angle_dir_idx];
         exo_data->config[config_defs::arm_2_flip_angle_dir_idx] = msg.data[config_defs::arm_2_flip_angle_dir_idx];
+        exo_data->config[config_defs::left_hip_RoM_idx] = msg.data[config_defs::left_hip_RoM_idx];
+        exo_data->config[config_defs::right_hip_RoM_idx] = msg.data[config_defs::right_hip_RoM_idx];
+        exo_data->config[config_defs::left_knee_RoM_idx] = msg.data[config_defs::left_knee_RoM_idx];
+        exo_data->config[config_defs::right_knee_RoM_idx] = msg.data[config_defs::right_knee_RoM_idx];
+        exo_data->config[config_defs::left_ankle_RoM_idx] = msg.data[config_defs::left_ankle_RoM_idx];
+        exo_data->config[config_defs::right_ankle_RoM_idx] = msg.data[config_defs::right_ankle_RoM_idx];
+        exo_data->config[config_defs::left_elbow_RoM_idx] = msg.data[config_defs::left_elbow_RoM_idx];
+        exo_data->config[config_defs::right_elbow_RoM_idx] = msg.data[config_defs::right_elbow_RoM_idx];
+        exo_data->config[config_defs::left_arm_1_RoM_idx] = msg.data[config_defs::left_arm_1_RoM_idx];
+        exo_data->config[config_defs::right_arm_1_RoM_idx] = msg.data[config_defs::right_arm_1_RoM_idx];
+        exo_data->config[config_defs::left_arm_2_RoM_idx] = msg.data[config_defs::left_arm_2_RoM_idx];
+        exo_data->config[config_defs::right_arm_2_RoM_idx] = msg.data[config_defs::right_arm_2_RoM_idx];
+        exo_data->config[config_defs::left_hip_torque_offset_idx] = msg.data[config_defs::left_hip_torque_offset_idx];
+        exo_data->config[config_defs::right_hip_torque_offset_idx] = msg.data[config_defs::right_hip_torque_offset_idx];
+        exo_data->config[config_defs::left_knee_torque_offset_idx] = msg.data[config_defs::left_knee_torque_offset_idx];
+        exo_data->config[config_defs::right_knee_torque_offset_idx] = msg.data[config_defs::right_knee_torque_offset_idx];
+        exo_data->config[config_defs::left_ankle_torque_offset_idx] = msg.data[config_defs::left_ankle_torque_offset_idx];
+        exo_data->config[config_defs::right_ankle_torque_offset_idx] = msg.data[config_defs::right_ankle_torque_offset_idx];
+        exo_data->config[config_defs::left_elbow_torque_offset_idx] = msg.data[config_defs::left_elbow_torque_offset_idx];
+        exo_data->config[config_defs::right_elbow_torque_offset_idx] = msg.data[config_defs::right_elbow_torque_offset_idx];
+        exo_data->config[config_defs::left_arm_1_torque_offset_idx] = msg.data[config_defs::left_arm_1_torque_offset_idx];
+        exo_data->config[config_defs::right_arm_1_torque_offset_idx] = msg.data[config_defs::right_arm_1_torque_offset_idx];
+        exo_data->config[config_defs::left_arm_2_torque_offset_idx] = msg.data[config_defs::left_arm_2_torque_offset_idx];
+        exo_data->config[config_defs::right_arm_2_torque_offset_idx] = msg.data[config_defs::right_arm_2_torque_offset_idx];
+        exo_data->config[config_defs::max_torque_rate_in_idx] = msg.data[config_defs::max_torque_rate_in_idx];
+        exo_data->config[config_defs::max_torque_rate_in_cycle_limit_idx] = msg.data[config_defs::max_torque_rate_in_cycle_limit_idx];
+        exo_data->config[config_defs::max_torque_in_idx] = msg.data[config_defs::max_torque_in_idx];
+        exo_data->config[config_defs::max_torque_in_cycle_limit_idx] = msg.data[config_defs::max_torque_in_cycle_limit_idx];
+        exo_data->config[config_defs::max_desired_torque_idx] = msg.data[config_defs::max_desired_torque_idx];
+        exo_data->config[config_defs::max_desired_torque_cycle_limit_idx] = msg.data[config_defs::max_desired_torque_cycle_limit_idx];
+        exo_data->config[config_defs::max_desired_torque_rate_idx] = msg.data[config_defs::max_desired_torque_rate_idx];
+        exo_data->config[config_defs::max_desired_torque_rate_cycle_limit_idx] = msg.data[config_defs::max_desired_torque_rate_cycle_limit_idx];
+        exo_data->config[config_defs::max_driver_torque_idx] = msg.data[config_defs::max_driver_torque_idx];
+        exo_data->config[config_defs::max_driver_torque_cycle_limit_idx] = msg.data[config_defs::max_driver_torque_cycle_limit_idx];
+        exo_data->config[config_defs::max_driver_torque_rate_idx] = msg.data[config_defs::max_driver_torque_rate_idx];
+        exo_data->config[config_defs::max_driver_torque_rate_cycle_limit_idx] = msg.data[config_defs::max_driver_torque_rate_cycle_limit_idx];
+        exo_data->config[config_defs::static_driver_torque_cycle_limit_idx] = msg.data[config_defs::static_driver_torque_cycle_limit_idx];
+
+#if defined(ARDUINO_TEENSY36) || defined(ARDUINO_TEENSY41)
+        const bool write_ok = write_ini_config(exo_data->config);
+        if (write_ok)
+        {
+            ini_parser(exo_data->config);
+        }
+#endif
     }
 
     inline static void get_cal_trq_sensor(UARTHandler *handler, ExoData *exo_data, UART_msg_t msg)

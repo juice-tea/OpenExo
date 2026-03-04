@@ -5,6 +5,170 @@
 //We only need to parse the INI file if we have access to the SD card.
 //The nano will get the info through SPI so doesn't need these functions.
 #if defined(ARDUINO_TEENSY36)  || defined(ARDUINO_TEENSY41) 
+    namespace
+    {
+        String _lookup_name_or_default(const config_map::IniKeyCode& map_ref, uint8_t value, const char* fallback)
+        {
+            for (const auto& kv : map_ref)
+            {
+                if (kv.second == value)
+                {
+                    return String(kv.first.c_str());
+                }
+            }
+            return String(fallback);
+        }
+
+        void _write_ini_kv(File& file, const char* key, const String& value)
+        {
+            file.print("\t");
+            file.print(key);
+            file.print(" = ");
+            file.println(value);
+        }
+
+        void _write_ini_kv(File& file, const char* key, uint8_t value)
+        {
+            file.print("\t");
+            file.print(key);
+            file.print(" = ");
+            file.println((int)value);
+        }
+    }
+
+    bool write_ini_config(const uint8_t* config_to_write, const char* filename)
+    {
+        if (config_to_write == nullptr)
+        {
+            return false;
+        }
+
+        pinMode(SD_SELECT, OUTPUT);
+        digitalWrite(SD_SELECT, HIGH);
+        SPI.begin();
+
+        if (!SD.begin(SD_SELECT))
+        {
+            return false;
+        }
+
+        if (SD.exists(filename))
+        {
+            SD.remove(filename);
+        }
+
+        File file = SD.open(filename, FILE_WRITE);
+        if (!file)
+        {
+            return false;
+        }
+
+        file.println("[Board]");
+        _write_ini_kv(file, "name", _lookup_name_or_default(config_map::board_name, config_to_write[config_defs::board_name_idx], "AK_Board"));
+        _write_ini_kv(file, "version", _lookup_name_or_default(config_map::board_version, config_to_write[config_defs::board_version_idx], "0.6"));
+        file.println();
+
+        file.println("[Battery]");
+        _write_ini_kv(file, "name", _lookup_name_or_default(config_map::battery, config_to_write[config_defs::battery_idx], "smart"));
+        file.println();
+
+        file.println("[Exo]");
+        _write_ini_kv(file, "name", _lookup_name_or_default(config_map::exo_name, config_to_write[config_defs::exo_name_idx], "Ankle"));
+        _write_ini_kv(file, "sides", _lookup_name_or_default(config_map::exo_side, config_to_write[config_defs::exo_side_idx], "bilateral"));
+
+        _write_ini_kv(file, "hip", _lookup_name_or_default(config_map::motor, config_to_write[config_defs::hip_idx], "0"));
+        _write_ini_kv(file, "knee", _lookup_name_or_default(config_map::motor, config_to_write[config_defs::knee_idx], "0"));
+        _write_ini_kv(file, "ankle", _lookup_name_or_default(config_map::motor, config_to_write[config_defs::ankle_idx], "0"));
+        _write_ini_kv(file, "elbow", _lookup_name_or_default(config_map::motor, config_to_write[config_defs::elbow_idx], "0"));
+        _write_ini_kv(file, "arm_1", _lookup_name_or_default(config_map::motor, config_to_write[config_defs::arm_1_idx], "0"));
+        _write_ini_kv(file, "arm_2", _lookup_name_or_default(config_map::motor, config_to_write[config_defs::arm_2_idx], "0"));
+
+        _write_ini_kv(file, "hipGearRatio", _lookup_name_or_default(config_map::gearing, config_to_write[config_defs::hip_gear_idx], "1"));
+        _write_ini_kv(file, "kneeGearRatio", _lookup_name_or_default(config_map::gearing, config_to_write[config_defs::knee_gear_idx], "1"));
+        _write_ini_kv(file, "ankleGearRatio", _lookup_name_or_default(config_map::gearing, config_to_write[config_defs::ankle_gear_idx], "1"));
+        _write_ini_kv(file, "elbowGearRatio", _lookup_name_or_default(config_map::gearing, config_to_write[config_defs::elbow_gear_idx], "1"));
+        _write_ini_kv(file, "arm_1GearRatio", _lookup_name_or_default(config_map::gearing, config_to_write[config_defs::arm_1_gear_idx], "1"));
+        _write_ini_kv(file, "arm_2GearRatio", _lookup_name_or_default(config_map::gearing, config_to_write[config_defs::arm_2_gear_idx], "1"));
+
+        _write_ini_kv(file, "hipDefaultController", _lookup_name_or_default(config_map::hip_controllers, config_to_write[config_defs::exo_hip_default_controller_idx], "0"));
+        _write_ini_kv(file, "kneeDefaultController", _lookup_name_or_default(config_map::knee_controllers, config_to_write[config_defs::exo_knee_default_controller_idx], "0"));
+        _write_ini_kv(file, "ankleDefaultController", _lookup_name_or_default(config_map::ankle_controllers, config_to_write[config_defs::exo_ankle_default_controller_idx], "0"));
+        _write_ini_kv(file, "elbowDefaultController", _lookup_name_or_default(config_map::elbow_controllers, config_to_write[config_defs::exo_elbow_default_controller_idx], "0"));
+        _write_ini_kv(file, "arm_1DefaultController", _lookup_name_or_default(config_map::arm_1_controllers, config_to_write[config_defs::exo_arm_1_default_controller_idx], "0"));
+        _write_ini_kv(file, "arm_2DefaultController", _lookup_name_or_default(config_map::arm_2_controllers, config_to_write[config_defs::exo_arm_2_default_controller_idx], "0"));
+
+        _write_ini_kv(file, "hipUseTorqueSensor", _lookup_name_or_default(config_map::use_torque_sensor, config_to_write[config_defs::hip_use_torque_sensor_idx], "0"));
+        _write_ini_kv(file, "kneeUseTorqueSensor", _lookup_name_or_default(config_map::use_torque_sensor, config_to_write[config_defs::knee_use_torque_sensor_idx], "0"));
+        _write_ini_kv(file, "ankleUseTorqueSensor", _lookup_name_or_default(config_map::use_torque_sensor, config_to_write[config_defs::ankle_use_torque_sensor_idx], "0"));
+        _write_ini_kv(file, "elbowUseTorqueSensor", _lookup_name_or_default(config_map::use_torque_sensor, config_to_write[config_defs::elbow_use_torque_sensor_idx], "0"));
+        _write_ini_kv(file, "arm_1UseTorqueSensor", _lookup_name_or_default(config_map::use_torque_sensor, config_to_write[config_defs::arm_1_use_torque_sensor_idx], "0"));
+        _write_ini_kv(file, "arm_2UseTorqueSensor", _lookup_name_or_default(config_map::use_torque_sensor, config_to_write[config_defs::arm_2_use_torque_sensor_idx], "0"));
+
+        _write_ini_kv(file, "hipFlipMotorDir", _lookup_name_or_default(config_map::flip_motor_dir, config_to_write[config_defs::hip_flip_motor_dir_idx], "0"));
+        _write_ini_kv(file, "kneeFlipMotorDir", _lookup_name_or_default(config_map::flip_motor_dir, config_to_write[config_defs::knee_flip_motor_dir_idx], "0"));
+        _write_ini_kv(file, "ankleFlipMotorDir", _lookup_name_or_default(config_map::flip_motor_dir, config_to_write[config_defs::ankle_flip_motor_dir_idx], "0"));
+        _write_ini_kv(file, "elbowFlipMotorDir", _lookup_name_or_default(config_map::flip_motor_dir, config_to_write[config_defs::elbow_flip_motor_dir_idx], "0"));
+        _write_ini_kv(file, "arm_1FlipMotorDir", _lookup_name_or_default(config_map::flip_motor_dir, config_to_write[config_defs::arm_1_flip_motor_dir_idx], "0"));
+        _write_ini_kv(file, "arm_2FlipMotorDir", _lookup_name_or_default(config_map::flip_motor_dir, config_to_write[config_defs::arm_2_flip_motor_dir_idx], "0"));
+
+        _write_ini_kv(file, "hipFlipTorqueDir", _lookup_name_or_default(config_map::flip_torque_dir, config_to_write[config_defs::hip_flip_torque_dir_idx], "0"));
+        _write_ini_kv(file, "kneeFlipTorqueDir", _lookup_name_or_default(config_map::flip_torque_dir, config_to_write[config_defs::knee_flip_torque_dir_idx], "0"));
+        _write_ini_kv(file, "ankleFlipTorqueDir", _lookup_name_or_default(config_map::flip_torque_dir, config_to_write[config_defs::ankle_flip_torque_dir_idx], "0"));
+        _write_ini_kv(file, "elbowFlipTorqueDir", _lookup_name_or_default(config_map::flip_torque_dir, config_to_write[config_defs::elbow_flip_torque_dir_idx], "0"));
+        _write_ini_kv(file, "arm_1FlipTorqueDir", _lookup_name_or_default(config_map::flip_torque_dir, config_to_write[config_defs::arm_1_flip_torque_dir_idx], "0"));
+        _write_ini_kv(file, "arm_2FlipTorqueDir", _lookup_name_or_default(config_map::flip_torque_dir, config_to_write[config_defs::arm_2_flip_torque_dir_idx], "0"));
+
+        _write_ini_kv(file, "hipFlipAngleDir", _lookup_name_or_default(config_map::flip_angle_dir, config_to_write[config_defs::hip_flip_angle_dir_idx], "0"));
+        _write_ini_kv(file, "kneeFlipAngleDir", _lookup_name_or_default(config_map::flip_angle_dir, config_to_write[config_defs::knee_flip_angle_dir_idx], "0"));
+        _write_ini_kv(file, "ankleFlipAngleDir", _lookup_name_or_default(config_map::flip_angle_dir, config_to_write[config_defs::ankle_flip_angle_dir_idx], "0"));
+        _write_ini_kv(file, "elbowFlipAngleDir", _lookup_name_or_default(config_map::flip_angle_dir, config_to_write[config_defs::elbow_flip_angle_dir_idx], "0"));
+        _write_ini_kv(file, "arm_1FlipAngleDir", _lookup_name_or_default(config_map::flip_angle_dir, config_to_write[config_defs::arm_1_flip_angle_dir_idx], "0"));
+        _write_ini_kv(file, "arm_2FlipAngleDir", _lookup_name_or_default(config_map::flip_angle_dir, config_to_write[config_defs::arm_2_flip_angle_dir_idx], "0"));
+
+        _write_ini_kv(file, "leftHipRoM", config_to_write[config_defs::left_hip_RoM_idx]);
+        _write_ini_kv(file, "rightHipRoM", config_to_write[config_defs::right_hip_RoM_idx]);
+        _write_ini_kv(file, "leftKneeRoM", config_to_write[config_defs::left_knee_RoM_idx]);
+        _write_ini_kv(file, "rightKneeRoM", config_to_write[config_defs::right_knee_RoM_idx]);
+        _write_ini_kv(file, "leftAnkleRoM", config_to_write[config_defs::left_ankle_RoM_idx]);
+        _write_ini_kv(file, "rightAnkleRoM", config_to_write[config_defs::right_ankle_RoM_idx]);
+        _write_ini_kv(file, "leftElbowRoM", config_to_write[config_defs::left_elbow_RoM_idx]);
+        _write_ini_kv(file, "rightElbowRoM", config_to_write[config_defs::right_elbow_RoM_idx]);
+        _write_ini_kv(file, "leftArm1RoM", config_to_write[config_defs::left_arm_1_RoM_idx]);
+        _write_ini_kv(file, "rightArm1RoM", config_to_write[config_defs::right_arm_1_RoM_idx]);
+        _write_ini_kv(file, "leftArm2RoM", config_to_write[config_defs::left_arm_2_RoM_idx]);
+        _write_ini_kv(file, "rightArm2RoM", config_to_write[config_defs::right_arm_2_RoM_idx]);
+
+        _write_ini_kv(file, "leftHipTorqueOffset", config_to_write[config_defs::left_hip_torque_offset_idx]);
+        _write_ini_kv(file, "rightHipTorqueOffset", config_to_write[config_defs::right_hip_torque_offset_idx]);
+        _write_ini_kv(file, "leftKneeTorqueOffset", config_to_write[config_defs::left_knee_torque_offset_idx]);
+        _write_ini_kv(file, "rightKneeTorqueOffset", config_to_write[config_defs::right_knee_torque_offset_idx]);
+        _write_ini_kv(file, "leftAnkleTorqueOffset", config_to_write[config_defs::left_ankle_torque_offset_idx]);
+        _write_ini_kv(file, "rightAnkleTorqueOffset", config_to_write[config_defs::right_ankle_torque_offset_idx]);
+        _write_ini_kv(file, "leftElbowTorqueOffset", config_to_write[config_defs::left_elbow_torque_offset_idx]);
+        _write_ini_kv(file, "rightElbowTorqueOffset", config_to_write[config_defs::right_elbow_torque_offset_idx]);
+        _write_ini_kv(file, "leftArm1TorqueOffset", config_to_write[config_defs::left_arm_1_torque_offset_idx]);
+        _write_ini_kv(file, "rightArm1TorqueOffset", config_to_write[config_defs::right_arm_1_torque_offset_idx]);
+        _write_ini_kv(file, "leftArm2TorqueOffset", config_to_write[config_defs::left_arm_2_torque_offset_idx]);
+        _write_ini_kv(file, "rightArm2TorqueOffset", config_to_write[config_defs::right_arm_2_torque_offset_idx]);
+
+        _write_ini_kv(file, "max_sensor_torque_rate", config_to_write[config_defs::max_torque_rate_in_idx]);
+        _write_ini_kv(file, "max_sensor_torque_rate_cycle_limit", config_to_write[config_defs::max_torque_rate_in_cycle_limit_idx]);
+        _write_ini_kv(file, "max_sensor_torque", config_to_write[config_defs::max_torque_in_idx]);
+        _write_ini_kv(file, "max_sensor_torque_cycle_limit", config_to_write[config_defs::max_torque_in_cycle_limit_idx]);
+        _write_ini_kv(file, "max_desired_torque", config_to_write[config_defs::max_desired_torque_idx]);
+        _write_ini_kv(file, "max_desired_torque_cycle_limit", config_to_write[config_defs::max_desired_torque_cycle_limit_idx]);
+        _write_ini_kv(file, "max_desired_torque_rate", config_to_write[config_defs::max_desired_torque_rate_idx]);
+        _write_ini_kv(file, "max_desired_torque_rate_cycle_limit", config_to_write[config_defs::max_desired_torque_rate_cycle_limit_idx]);
+        _write_ini_kv(file, "max_driver_torque", config_to_write[config_defs::max_driver_torque_idx]);
+        _write_ini_kv(file, "max_driver_torque_cycle_limit", config_to_write[config_defs::max_driver_torque_cycle_limit_idx]);
+        _write_ini_kv(file, "max_driver_torque_rate", config_to_write[config_defs::max_driver_torque_rate_idx]);
+        _write_ini_kv(file, "max_driver_torque_rate_cycle_limit", config_to_write[config_defs::max_driver_torque_rate_cycle_limit_idx]);
+        _write_ini_kv(file, "static_driver_torque_cycle_limit", config_to_write[config_defs::static_driver_torque_cycle_limit_idx]);
+
+        file.close();
+        return true;
+    }
+
     void ini_print_error_message(uint8_t e, bool eol = true)
     {
         if(Serial)

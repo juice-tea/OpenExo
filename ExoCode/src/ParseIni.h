@@ -383,6 +383,15 @@ namespace config_defs
      * @param pointer to the uint8_t array to be updated with the encoded parameter info. Array should be ini_config::number_of_keys in length
      */
     void ini_parser(char* filename, uint8_t* config_to_send); //uses sent filename
+
+    /**
+     * @brief Writes encoded config bytes to SD config.ini (overwrites existing file).
+     *
+     * @param config_to_write pointer to encoded config array (ini_config::number_of_keys length)
+     * @param filename path to ini file (default: /config.ini)
+     * @return true if file was written, false otherwise
+     */
+    bool write_ini_config(const uint8_t* config_to_write, const char* filename = "/config.ini");
     
     /**
      * @brief Retrieve the key values and print the output
