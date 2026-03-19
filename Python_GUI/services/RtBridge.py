@@ -21,6 +21,8 @@ class RtBridge(QtCore.QObject):
     controllersReceived = QtCore.Signal(list, list)
     controllerMatrixReceived = QtCore.Signal(list)
     rtDataUpdated = QtCore.Signal(list)
+    configChunkReceived = QtCore.Signal(list)
+    overwriteKeyAckReceived = QtCore.Signal(list)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -273,6 +275,14 @@ class RtBridge(QtCore.QObject):
                         if val is not None:
                             self._payload.append(val)
                         if self._num_count == self._data_length:
+                            if self._command == 'v':
+                                self.configChunkReceived.emit(list(self._payload))
+                                self._reset_stream()
+                                return
+                            if self._command == 'y':
+                                self.overwriteKeyAckReceived.emit(list(self._payload))
+                                self._reset_stream()
+                                return
                             # Drop spurious single-value frames (e.g., fragmented BLE chunks)
                             if self._data_length <= 1:
                                 self._reset_stream()

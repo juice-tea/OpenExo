@@ -202,6 +202,10 @@ namespace UART_command_handlers
 
     inline static void get_config(UARTHandler *handler, ExoData *exo_data, UART_msg_t msg)
     {
+#if defined(ARDUINO_TEENSY36) || defined(ARDUINO_TEENSY41)
+        ini_parser(exo_data->config);
+#endif
+
         UART_msg_t tx_msg;
         tx_msg.command = UART_command_names::update_config;
         tx_msg.joint_id = 0;
@@ -298,6 +302,13 @@ namespace UART_command_handlers
     {
         // logger::println("UART_command_handlers::update_config->got message: ");
         UART_msg_t_utils::print_msg(msg);
+
+        if (msg.len != ini_config::number_of_keys)
+        {
+            logger::println("UART_command_handlers::update_config->invalid config length", LogLevel::Warn);
+            return;
+        }
+
         exo_data->config[config_defs::board_name_idx] = msg.data[config_defs::board_name_idx];
         exo_data->config[config_defs::battery_idx] = msg.data[config_defs::battery_idx];
         exo_data->config[config_defs::board_version_idx] = msg.data[config_defs::board_version_idx];

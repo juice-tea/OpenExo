@@ -122,10 +122,10 @@ class DesiredTorqueClampError : public ErrorType
             {
                 _data->max_desired_torque_cycle_count++;
                 _data->controller.desired_torque = _data->max_desired_torque * (_data->controller.desired_torque > 0 ? 1 : -1);   // Clamp value to max.
-                if (_data->max_desired_torque_cycle_count >= _data->max_desired_torque_cycle_limit)
-                {
-                    return true;
-                }
+                // if (_data->max_desired_torque_cycle_count >= _data->max_desired_torque_cycle_limit)                              // Tempo disable due to tripping faults too easily.
+                // {
+                //     return true;
+                // }
             }
             else
             {
@@ -151,10 +151,10 @@ class DriverTorqueClampError : public ErrorType
             {
                 _data->max_driver_torque_cycle_count++;
                 _data->controller.setpoint = _data->max_driver_torque * (_data->controller.setpoint > 0 ? 1 : -1);   // Clamp value to max.
-                if (_data->max_driver_torque_cycle_count >= _data->max_driver_torque_cycle_limit)
-                {
-                    return true;
-                }
+                // if (_data->max_driver_torque_cycle_count >= _data->max_driver_torque_cycle_limit)                // Temporarily disabling due to tripping faults too easily.
+                // {
+                //     return true;
+                // }
             }
             else
             {

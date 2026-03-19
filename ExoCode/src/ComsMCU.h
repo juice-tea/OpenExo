@@ -79,6 +79,9 @@ class ComsMCU
         void _process_complete_gui_command(BleMessage* msg);
         void _schedule_system_reset();
         void _maybe_system_reset();
+        void _query_config_and_send_to_gui();
+        void _send_config_chunks_to_gui();
+        void _send_overwrite_key_ack(uint8_t key_index, uint8_t status);
 
         //Reference to ExoBLE object, this is the next step down the composition heirarchy
         ExoBLE* _exo_ble;
@@ -96,6 +99,7 @@ class ComsMCU
         bool _reset_pending = false;
         uint32_t _reset_start_ms = 0;
         const uint32_t _reset_delay_ms = 5000;
+        static const uint8_t _config_chunk_values = 8;
 
         //Alpha value for the exponentially weighted moving average on the battery data
         // const float k_battery_ewma_alpha = 0.1;

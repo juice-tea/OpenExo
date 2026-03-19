@@ -312,6 +312,19 @@ void ComsMCU::_process_complete_gui_command(BleMessage* msg)
     case ble_names::update_param:
         ble_handlers::update_param(_data, msg);
         break;
+    case ble_names::overwrite_key:
+    {
+        uint8_t key_index = 255;
+        const bool ok = ble_handlers::overwrite_key(_data, msg, &key_index);
+        _send_overwrite_key_ack(key_index, ok ? 1 : 0);
+        break;
+    }
+    case ble_names::overwrite_config:
+        ble_handlers::overwrite_config(_data, msg);
+        break;
+    case ble_names::query_config:
+        _query_config_and_send_to_gui();
+        break;
     case ble_names::reset_system:
         _schedule_system_reset();
         break;
@@ -351,6 +364,70 @@ void ComsMCU::_maybe_system_reset()
     delay(10);
 
     exo_system_reset();
+}
+
+void ComsMCU::_query_config_and_send_to_gui()
+{
+    UARTHandler* uart_handler = UARTHandler::get_instance();
+
+    UART_msg_t tx_msg;
+    tx_msg.command = UART_command_names::get_config;
+    tx_msg.joint_id = 0;
+    tx_msg.len = 0;
+
+    UART_msg_t rx_msg = UART_command_utils::call_and_response(uart_handler, tx_msg, 4000);
+
+    if (rx_msg.command != UART_command_names::update_config)
+    {
+        logger::println("ComsMCU::_query_config_and_send_to_gui->No update_config response", LogLevel::Error);
+        return;
+    }
+
+    if (rx_msg.len != ini_config::number_of_keys)
+    {
+        logger::println("ComsMCU::_query_config_and_send_to_gui->Invalid config length", LogLevel::Error);
+        return;
+    }
+
+    for (uint8_t i = 0; i < ini_config::number_of_keys; i++)
+    {
+        _data->config[i] = static_cast<uint8_t>(rx_msg.data[i]);
+    }
+
+    _send_config_chunks_to_gui();
+}
+
+void ComsMCU::_send_overwrite_key_ack(uint8_t key_index, uint8_t status)
+{
+    BleMessage ack_msg = BleMessage();
+    ack_msg.command = ble_names::overwrite_key_ack;
+    ack_msg.expecting = 2;
+    ack_msg.data[0] = key_index;
+    ack_msg.data[1] = status;
+    _exo_ble->send_message(ack_msg);
+}
+
+void ComsMCU::_send_config_chunks_to_gui()
+{
+    for (uint8_t start_idx = 0; start_idx < ini_config::number_of_keys; start_idx += _config_chunk_values)
+    {
+        const uint8_t remaining = ini_config::number_of_keys - start_idx;
+        const uint8_t chunk_count = (remaining > _config_chunk_values) ? _config_chunk_values : remaining;
+
+        BleMessage chunk_msg = BleMessage();
+        chunk_msg.command = ble_names::send_config_chunk;
+        chunk_msg.expecting = 10;
+        chunk_msg.data[0] = start_idx;
+        chunk_msg.data[1] = chunk_count;
+
+        for (uint8_t offset = 0; offset < chunk_count; offset++)
+        {
+            chunk_msg.data[offset + 2] = _data->config[start_idx + offset];
+        }
+
+        _exo_ble->send_message(chunk_msg);
+        delay(10);
+    }
 }
 
 void ComsMCU::_life_pulse()

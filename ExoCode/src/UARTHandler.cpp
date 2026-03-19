@@ -1,6 +1,7 @@
 #include "UARTHandler.h"
 #include "Utilities.h"
 #include "Logger.h"
+#include "ParseIni.h"
 
 #define MAX_NUM_LEGS 2
 #define MAX_NUM_JOINTS_PER_LEG 2 //Current PCB can only do 2 motors per side, if you have made a new PCB, update.
@@ -29,6 +30,7 @@ typedef enum
 static const uint8_t UART_CMD_UPDATE_REAL_TIME_DATA = 0x12;
 static const uint8_t UART_TYPED_RT_FLOAT_COUNT = 11;
 static const uint8_t UART_TYPED_RT_PAYLOAD_LEN = 16;
+static const uint8_t UART_CMD_UPDATE_CONFIG = 0x06;
 
 
 UARTHandler::UARTHandler()
@@ -195,6 +197,12 @@ void UARTHandler::_pack(uint8_t msg_id, uint8_t len, uint8_t joint_id, float *da
     return;
   }
 #endif
+
+    if (_should_use_compact_config_packet(msg_id, len))
+    {
+      _pack_compact_config_payload(data, len, data_to_pack + DATA_START);
+      return;
+    }
     
     //Pack payload with platform-specific encoding.
 #if UART_PACK_FLOATS
@@ -225,6 +233,11 @@ UART_msg_t UARTHandler::_unpack(uint8_t* data, uint8_t len)
     return msg;
   }
 #endif
+
+    if (_unpack_compact_config_payload(data, len, msg))
+    {
+      return msg;
+    }
 
     msg.command = data[COMMAND];
     msg.joint_id = data[JOINT_ID];
@@ -267,6 +280,11 @@ uint8_t UARTHandler::_get_packed_length(uint8_t msg_id, uint8_t len, uint8_t joi
     return DATA_START + UART_TYPED_RT_PAYLOAD_LEN;
   }
 #endif
+
+    if (_should_use_compact_config_packet(msg_id, len))
+    {
+      return DATA_START + len;
+    }
 
     uint8_t _val = 0;
 #if UART_PACK_FLOATS
@@ -529,6 +547,11 @@ bool UARTHandler::_should_use_typed_rt_packet(uint8_t msg_id, uint8_t len)
   return (msg_id == UART_CMD_UPDATE_REAL_TIME_DATA) && (len == UART_TYPED_RT_FLOAT_COUNT);
 }
 
+bool UARTHandler::_should_use_compact_config_packet(uint8_t msg_id, uint8_t len)
+{
+  return (msg_id == UART_CMD_UPDATE_CONFIG) && (len == (uint8_t)ini_config::number_of_keys);
+}
+
 uint8_t UARTHandler::_pack_typed_rt_payload(float *data, uint8_t *payload)
 {
   auto to_i16_scaled_100 = [](float value) -> int16_t
@@ -609,6 +632,25 @@ uint8_t UARTHandler::_pack_typed_rt_payload(float *data, uint8_t *payload)
   return UART_TYPED_RT_PAYLOAD_LEN;
 }
 
+uint8_t UARTHandler::_pack_compact_config_payload(float *data, uint8_t len, uint8_t *payload)
+{
+  for (uint8_t i = 0; i < len; i++)
+  {
+    float value_f = data[i];
+    if (value_f < 0.0f)
+    {
+      value_f = 0.0f;
+    }
+    if (value_f > 255.0f)
+    {
+      value_f = 255.0f;
+    }
+    payload[i] = (uint8_t)(value_f + 0.5f);
+  }
+
+  return len;
+}
+
 bool UARTHandler::_unpack_typed_rt_payload(uint8_t *data, uint8_t len, UART_msg_t &msg)
 {
   if (!_should_use_typed_rt_packet(data[COMMAND], UART_TYPED_RT_FLOAT_COUNT))
@@ -650,6 +692,32 @@ bool UARTHandler::_unpack_typed_rt_payload(uint8_t *data, uint8_t len, UART_msg_
       ((uint32_t)payload[14] << 24);
   msg.data[9] = ((float)time_ms) / 1000.0f;
   msg.data[10] = (float)payload[15];
+
+  return true;
+}
+
+bool UARTHandler::_unpack_compact_config_payload(uint8_t *data, uint8_t len, UART_msg_t &msg)
+{
+  if (!_should_use_compact_config_packet(data[COMMAND], (uint8_t)ini_config::number_of_keys))
+  {
+    return false;
+  }
+
+  const uint8_t expected_len = DATA_START + (uint8_t)ini_config::number_of_keys;
+  if (len != expected_len)
+  {
+    return false;
+  }
+
+  msg.command = data[COMMAND];
+  msg.joint_id = data[JOINT_ID];
+  msg.len = (uint8_t)ini_config::number_of_keys;
+
+  uint8_t *payload = data + DATA_START;
+  for (uint8_t i = 0; i < msg.len; i++)
+  {
+    msg.data[i] = (float)payload[i];
+  }
 
   return true;
 }

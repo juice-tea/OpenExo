@@ -412,6 +412,94 @@ class QtExoDeviceManager(QtCore.QObject):
 
         self._submit(_do())
 
+    @QtCore.Slot(float, float)
+    def overwriteKey(self, key_index: float, key_value: float):
+        fut = self.overwriteKeyFuture(key_index, key_value)
+        if fut is None:
+            return
+
+        def _done(f):
+            try:
+                ok = f.result()
+                if not ok:
+                    self.error.emit(f"Overwrite key failed: idx={int(key_index)} value={float(key_value)}")
+                    return
+                self.log.emit(f"Overwrite key sent: idx={int(key_index)} value={float(key_value)}")
+            except Exception as ex:
+                self.error.emit(str(ex))
+
+        fut.add_done_callback(_done)
+
+    def overwriteKeyFuture(self, key_index: float, key_value: float):
+        if not self._ensure_connected():
+            return None
+
+        async def _do():
+            if key_index < 0 or key_index > 255 or key_value < 0 or key_value > 255:
+                raise ValueError("overwriteKey expects key_index and key_value in [0, 255]")
+
+            async def _send_three_writes():
+                await self._client.write_gatt_char(UART_TX_UUID, b"O", response=False)
+                await self._client.write_gatt_char(UART_TX_UUID, struct.pack("<d", float(key_index)), response=False)
+                await self._client.write_gatt_char(UART_TX_UUID, struct.pack("<d", float(key_value)), response=False)
+            try:
+                await asyncio.wait_for(_send_three_writes(), timeout=2.0)
+                return True
+            except Exception:
+                return False
+
+        return self._submit(_do())
+
+    @QtCore.Slot()
+    def overwriteConfig(self):
+        fut = self.overwriteConfigFuture()
+        if fut is None:
+            return
+
+        def _done(f):
+            try:
+                f.result()
+                self.log.emit("Overwrite config command sent")
+            except Exception as ex:
+                self.error.emit(str(ex))
+
+        fut.add_done_callback(_done)
+
+    def overwriteConfigFuture(self):
+        if not self._ensure_connected():
+            return None
+
+        async def _do():
+            await asyncio.wait_for(self._client.write_gatt_char(UART_TX_UUID, b"P", response=False), timeout=2.0)
+            return True
+
+        return self._submit(_do())
+
+    @QtCore.Slot()
+    def queryConfig(self):
+        fut = self.queryConfigFuture()
+        if fut is None:
+            return
+
+        def _done(f):
+            try:
+                f.result()
+                self.log.emit("Query config command sent")
+            except Exception as ex:
+                self.error.emit(str(ex))
+
+        fut.add_done_callback(_done)
+
+    def queryConfigFuture(self):
+        if not self._ensure_connected():
+            return None
+
+        async def _do():
+            await asyncio.wait_for(self._client.write_gatt_char(UART_TX_UUID, b"Q", response=False), timeout=2.0)
+            return True
+
+        return self._submit(_do())
+
     @QtCore.Slot()
     def sendPresetFsrValues(self):
         if not self._ensure_connected():

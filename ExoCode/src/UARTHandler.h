@@ -27,7 +27,7 @@
 #define FIXED_POINT_FACTOR 100
 #define UART_BAUD 256000
 
-#define MAX_RX_LEN 64       //Bytes
+#define MAX_RX_LEN 128      //Bytes
 #define RX_TIMEOUT_US 1000  //Microseconds
 #define UART_USE_CRC 1
 #define UART_USE_TYPED_RT_PACKET 1
@@ -111,9 +111,15 @@ class UARTHandler
 
         bool _should_use_typed_rt_packet(uint8_t msg_id, uint8_t len);
 
+        bool _should_use_compact_config_packet(uint8_t msg_id, uint8_t len);
+
         uint8_t _pack_typed_rt_payload(float *data, uint8_t *payload);
 
+        uint8_t _pack_compact_config_payload(float *data, uint8_t len, uint8_t *payload);
+
         bool _unpack_typed_rt_payload(uint8_t *data, uint8_t len, UART_msg_t &msg);
+
+        bool _unpack_compact_config_payload(uint8_t *data, uint8_t len, UART_msg_t &msg);
 
         uint8_t _crc8(const uint8_t* data, uint8_t len);
 

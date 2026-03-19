@@ -51,6 +51,9 @@ namespace ble_names
     static const char mark              = 'N';
     static const char update_param      = 'f';
     static const char reset_system      = 'Z';
+    static const char overwrite_key     = 'O';
+    static const char overwrite_config  = 'P';
+    static const char query_config      = 'Q';
 
     //Sending Commands (Firmware->GUI)
     static const char send_real_time_data = '?';
@@ -60,6 +63,8 @@ namespace ble_names
     static const char send_trq_cal        = 'H';
     static const char send_step_count     = 's';
     static const char cal_fsr_finished    = 'n';
+    static const char send_config_chunk   = 'v';
+    static const char overwrite_key_ack   = 'y';
 
 };
 
@@ -85,6 +90,9 @@ namespace ble
         {ble_names::new_trq,            4},
         {ble_names::update_param,       4},
         {ble_names::reset_system,       0},
+        {ble_names::overwrite_key,      2},
+        {ble_names::overwrite_config,   0},
+        {ble_names::query_config,       0},
         
         //Sending Commands
         {ble_names::send_batt,              1},
@@ -94,6 +102,8 @@ namespace ble
         {ble_names::send_trq_cal,           2},
         {ble_names::send_step_count,        2},
         {ble_names::cal_fsr_finished,       0},
+        {ble_names::send_config_chunk,      10},
+        {ble_names::overwrite_key_ack,      2},
     };
 };
 
@@ -455,6 +465,58 @@ namespace ble_handlers
 		Serial.print(", PARAM_VALUE: ");
 		Serial.print(tx_msg.data[(uint8_t)UART_command_enums::controller_param::PARAM_VALUE]);
 		#endif
+    }
+
+    inline static bool overwrite_key(ExoData* data, BleMessage* msg, uint8_t* out_key_index = nullptr)
+    {
+        if (out_key_index != nullptr)
+        {
+            *out_key_index = 255;
+        }
+
+        const float key_index_f = msg->data[0];
+        const float key_value_f = msg->data[1];
+
+        if ((key_index_f < 0.0f) || (key_index_f > (float)(ini_config::number_of_keys - 1)) || (key_value_f < 0.0f) || (key_value_f > 255.0f))
+        {
+            logger::println("ble_handlers::overwrite_key() - Invalid key index/value range", LogLevel::Warn);
+            return false;
+        }
+
+        const uint8_t key_index = (uint8_t)key_index_f;
+        const uint8_t key_value = (uint8_t)key_value_f;
+
+        if (out_key_index != nullptr)
+        {
+            *out_key_index = key_index;
+        }
+
+        if (((float)key_index != key_index_f) || ((float)key_value != key_value_f))
+        {
+            logger::println("ble_handlers::overwrite_key() - Non-integer key index/value", LogLevel::Warn);
+            return false;
+        }
+
+        data->config[key_index] = key_value;
+        return true;
+    }
+
+    inline static void overwrite_config(ExoData* data, BleMessage* msg)
+    {
+        (void)msg;
+        UARTHandler* uart_handler = UARTHandler::get_instance();
+
+        UART_msg_t tx_msg;
+        tx_msg.command = UART_command_names::update_config;
+        tx_msg.joint_id = 0;
+        tx_msg.len = ini_config::number_of_keys;
+
+        for (uint8_t i = 0; i < ini_config::number_of_keys; i++)
+        {
+            tx_msg.data[i] = data->config[i];
+        }
+
+        uart_handler->UART_msg(tx_msg);
     }
 
 }

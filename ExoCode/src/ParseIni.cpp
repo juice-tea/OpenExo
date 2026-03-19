@@ -63,13 +63,21 @@
             return false;
         }
 
+        file.println(";Board information");
+        file.println(";ALL FIELDS SHOULD BE LESS THAN 25 CHAR");
+
         file.println("[Board]");
+        file.println(";NEEDS TO BE SET IN \"Config.h\" PRIOR TO FLASHING TO TEENSY & NANO");
+        file.println(";Select one of the available board names (see list in Config.h)");
+        file.println(";Define the board version in \"BOARD_VERSION\" slot immedietly after the list");
         _write_ini_kv(file, "name", _lookup_name_or_default(config_map::board_name, config_to_write[config_defs::board_name_idx], "AK_Board"));
         _write_ini_kv(file, "version", _lookup_name_or_default(config_map::board_version, config_to_write[config_defs::board_version_idx], "0.6"));
         file.println();
 
         file.println("[Battery]");
         _write_ini_kv(file, "name", _lookup_name_or_default(config_map::battery, config_to_write[config_defs::battery_idx], "smart"));
+        file.println();
+
         file.println();
 
         file.println("[Exo]");
@@ -151,10 +159,10 @@
         _write_ini_kv(file, "leftArm2TorqueOffset", config_to_write[config_defs::left_arm_2_torque_offset_idx]);
         _write_ini_kv(file, "rightArm2TorqueOffset", config_to_write[config_defs::right_arm_2_torque_offset_idx]);
 
-        _write_ini_kv(file, "max_sensor_torque_rate", config_to_write[config_defs::max_torque_rate_in_idx]);
-        _write_ini_kv(file, "max_sensor_torque_rate_cycle_limit", config_to_write[config_defs::max_torque_rate_in_cycle_limit_idx]);
         _write_ini_kv(file, "max_sensor_torque", config_to_write[config_defs::max_torque_in_idx]);
         _write_ini_kv(file, "max_sensor_torque_cycle_limit", config_to_write[config_defs::max_torque_in_cycle_limit_idx]);
+        _write_ini_kv(file, "max_sensor_torque_rate", config_to_write[config_defs::max_torque_rate_in_idx]);
+        _write_ini_kv(file, "max_sensor_torque_rate_cycle_limit", config_to_write[config_defs::max_torque_rate_in_cycle_limit_idx]);
         _write_ini_kv(file, "max_desired_torque", config_to_write[config_defs::max_desired_torque_idx]);
         _write_ini_kv(file, "max_desired_torque_cycle_limit", config_to_write[config_defs::max_desired_torque_cycle_limit_idx]);
         _write_ini_kv(file, "max_desired_torque_rate", config_to_write[config_defs::max_desired_torque_rate_idx]);
@@ -165,7 +173,9 @@
         _write_ini_kv(file, "max_driver_torque_rate_cycle_limit", config_to_write[config_defs::max_driver_torque_rate_cycle_limit_idx]);
         _write_ini_kv(file, "static_driver_torque_cycle_limit", config_to_write[config_defs::static_driver_torque_cycle_limit_idx]);
 
+        file.flush();
         file.close();
+        delay(10);
         return true;
     }
 
@@ -285,6 +295,11 @@
           
         get_section_key(ini,"Board","name",buffer,buffer_len); //Read the key.
         data.board_name = buffer;                              //Store the value
+
+        if (data.board_name.length() == 0)
+        {
+            data.board_name = "AK_Board";
+        }
         
         // logger::print(data.board_name.c_str());
         // logger::print("\t");
@@ -294,6 +309,11 @@
         
         get_section_key(ini,"Board","version",buffer,buffer_len);
         data.board_version = buffer;
+
+        if (data.board_version.length() == 0)
+        {
+            data.board_version = "0.6";
+        }
 
         // logger::print(data.board_version.c_str());
         // logger::print("\t");
@@ -305,6 +325,11 @@
         
         get_section_key(ini,"Battery","name",buffer,buffer_len);
         data.battery = buffer;
+
+        if (data.battery.length() == 0)
+        {
+            data.battery = "smart";
+        }
 
         // logger::print(data.board_version.c_str());
         // logger::print("\t");
@@ -706,14 +731,6 @@
         data.right_arm_2_torque_offset = atof(buffer);
         config_to_send[config_defs::right_arm_2_torque_offset_idx] = data.right_arm_2_torque_offset;
 
-        get_section_key(ini,"Exo","max_sensor_torque_rate",buffer,buffer_len);
-        data.max_sensor_torque_rate = atof(buffer);
-        config_to_send[config_defs::max_torque_rate_in_idx] = data.max_sensor_torque_rate;
-
-        get_section_key(ini,"Exo","max_sensor_torque_rate_cycle_limit",buffer,buffer_len);
-        data.max_sensor_torque_rate_cycle_limit = atof(buffer);
-        config_to_send[config_defs::max_torque_rate_in_cycle_limit_idx] = data.max_sensor_torque_rate_cycle_limit;
-
         get_section_key(ini,"Exo","max_sensor_torque",buffer,buffer_len);
         data.max_sensor_torque = atof(buffer);
         config_to_send[config_defs::max_torque_in_idx] = data.max_sensor_torque;
@@ -721,6 +738,14 @@
         get_section_key(ini,"Exo","max_sensor_torque_cycle_limit",buffer,buffer_len);
         data.max_sensor_torque_cycle_limit = atof(buffer);
         config_to_send[config_defs::max_torque_in_cycle_limit_idx] = data.max_sensor_torque_cycle_limit;
+
+        get_section_key(ini,"Exo","max_sensor_torque_rate",buffer,buffer_len);
+        data.max_sensor_torque_rate = atof(buffer);
+        config_to_send[config_defs::max_torque_rate_in_idx] = data.max_sensor_torque_rate;
+
+        get_section_key(ini,"Exo","max_sensor_torque_rate_cycle_limit",buffer,buffer_len);
+        data.max_sensor_torque_rate_cycle_limit = atof(buffer);
+        config_to_send[config_defs::max_torque_rate_in_cycle_limit_idx] = data.max_sensor_torque_rate_cycle_limit;
 
         get_section_key(ini,"Exo","max_desired_torque",buffer,buffer_len);
         data.max_desired_torque = atof(buffer);

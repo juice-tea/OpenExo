@@ -76,6 +76,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.rt_bridge.handshakeReceived.connect(self._on_handshake)
         self.rt_bridge.parameterNamesReceived.connect(self._on_param_names)
         self.rt_bridge.controllersReceived.connect(self._on_controllers)
+        self.rt_bridge.configChunkReceived.connect(self.scan_page.on_config_chunk_received)
+        self.rt_bridge.overwriteKeyAckReceived.connect(self.scan_page.on_overwrite_key_ack_received)
         # Receive flattened 2D matrix of controllers and parameters
         self.rt_bridge.controllerMatrixReceived.connect(self._on_controller_matrix)
 
@@ -542,6 +544,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.scan_page.btn_start_trial.setEnabled(False)
             try:
                 self.scan_page.btn_calibrate_torque.setEnabled(False)
+                self.scan_page.btn_overwrite_boot.setEnabled(False)
             except Exception:
                 pass
         except Exception:
@@ -617,6 +620,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.scan_page.btn_start_trial.setEnabled(False)  # Enabled after torque calibration
             try:
                 self.scan_page.btn_calibrate_torque.setEnabled(True)
+                self.scan_page.btn_overwrite_boot.setEnabled(True)
             except Exception:
                 pass
         except Exception:
@@ -642,6 +646,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.scan_page.btn_start_trial.setEnabled(False)
             try:
                 self.scan_page.btn_calibrate_torque.setEnabled(False)
+                self.scan_page.btn_overwrite_boot.setEnabled(False)
             except Exception:
                 pass
             
